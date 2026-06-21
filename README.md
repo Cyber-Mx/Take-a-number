@@ -75,7 +75,7 @@ npm run dev
 
 | Ruta | Descripción |
 |------|-------------|
-| `/` | Página principal de bienvenida FOFEL |
+| `/` | Página principal de bienvenida |
 | `/inicio` | Panel de configuración del sistema |
 | `/turno` | Kiosco para toma de turno por el cliente |
 | `/vista` | Pantalla grande de presentación (TV/Monitor) |
@@ -190,7 +190,7 @@ Para el pronóstico del tiempo en el pie de página de `/vista`:
 - Use `pm2` para mantener el servidor corriendo en producción:
   ```bash
   npm install -g pm2
-  pm2 start server.js --name fofel-turnos
+  pm2 start server.js --name (NOMBRE)-turnos
   pm2 startup
   pm2 save
   ```
