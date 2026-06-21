@@ -1,4 +1,4 @@
-# 🔧 FOFEL — Sistema de Control de Turnos
+Sistema de Control de Turnos
 
 Sistema completo de gestión de turnos para ferretería, desarrollado con Node.js + Express + PostgreSQL + Socket.IO.
 
