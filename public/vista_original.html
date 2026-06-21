@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vista General - FOFEL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --naranja: #E8540A;
+    --acero: #111B25;
+    --acero2: #172130;
+    --acero3: #1E2E3E;
+    --crema: #F5EDD6;
+    --gris: #8B9BAA;
+    --verde-online: #27AE60;
+    --rojo-offline: #E74C3C;
+    --borde: rgba(255,255,255,.07);
+    --amarillo: #F39C12;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; overflow:hidden; font-family:'Barlow',sans-serif; background:var(--acero); color:var(--crema); }
+
+  /* ═══ LAYOUT PRINCIPAL ═══
+     Grid de 6 secciones + pie
+     Sec1: 30%w 65%h | Sec2: 70%w 65%h
+     Sec3: 30%w 25%h | Sec4: 70%w 25%h
+     Sec5: 100%w 10%h
+  */
+  .layout {
+    display: grid;
+    grid-template-columns: 30% 70%;
+    grid-template-rows: 65% 25% 10%;
+    height: 100vh;
+    width: 100vw;
+    gap: 2px;
+  }
+
+  .sec {
+    background: var(--acero2);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── SEC1 Lista de videos ── */
+  #sec1 { border-right:1px solid var(--borde); }
+
+  .sec1-header {
+    background: var(--acero3);
+    padding: 10px 14px;
+    border-bottom: 2px solid var(--naranja);
+    font-family:'Bebas Neue',sans-serif;
+    font-size:16px;
+    letter-spacing:2px;
+    color:var(--naranja);
+  }
+
+  .video-list {
+    overflow-y: auto;
+    height: calc(100% - 44px);
+    scrollbar-width: thin;
+    scrollbar-color: var(--naranja) var(--acero3);
+  }
+
+  .video-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--borde);
+    cursor: pointer;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    transition: background .2s;
+  }
+  .video-item:hover { background:rgba(232,84,10,.08); }
+  .video-item.active { background:rgba(232,84,10,.15); border-left:3px solid var(--naranja); }
+
+  .video-num {
+    width:32px; height:32px;
+    background:var(--acero3);
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Bebas Neue',sans-serif;
+    font-size:14px;
+    color:var(--naranja);
+    flex-shrink:0;
+  }
+  .video-item.active .video-num { background:var(--naranja); color:#fff; }
+
+  /*.video-nombre { font-size:13px; line-height:1.3; }*/
+  .video-nombre { font-size:18px; line-height:1.3; }
+  .video-play-icon { margin-left:auto; font-size:16px; opacity:0; transition:.2s; }
+  .video-item:hover .video-play-icon, .video-item.active .video-play-icon { opacity:1; }
+
+  /* ── SEC2 Video player ── */
+  #sec2 {
+    position:relative;
+    background:#000;
+  }
+
+  #videoPlayer {
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    background:#000;
+    /* Ocultar botón de pantalla completa */
+    display:block;
+  }
+
+  /* Ocultar fullscreen en todos los navegadores */
+  #videoPlayer::-webkit-media-controls-fullscreen-button { display:none !important; }
+  video::-webkit-media-controls-panel { background:rgba(0,0,0,.6) !important; }
+
+  .video-overlay-info {
+    position:absolute;
+    top:10px;left:10px;
+    background:rgba(0,0,0,.6);
+    border-radius:6px;
+    padding:4px 10px;
+    font-size:12px;
+    color:var(--gris);
+    backdrop-filter:blur(4px);
+  }
+
+  /* ── SEC3 Folios / Estado ── */
+  #sec3 {
+    border-top:1px solid var(--borde);
+    border-right:1px solid var(--borde);
+  }
+
+  .sec3-header {
+    background:var(--acero3);
+    padding:8px 14px;
+    border-bottom:2px solid var(--naranja);
+    font-family:'Bebas Neue',sans-serif;
+    font-size:15px;
+    letter-spacing:2px;
+    color:var(--naranja);
+    display:flex;align-items:center;gap:8px;
+  }
+
+  .folios-tabla-wrap {
+    height:calc(100% - 38px);
+    overflow-y:auto;
+    scrollbar-width:thin;
+    scrollbar-color:var(--naranja) var(--acero3);
+  }
+
+  .folios-tabla {
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+  }
+
+  .folios-tabla th {
+    position:sticky;top:0;
+    background:var(--acero3);
+    padding:6px 12px;
+    text-align:left;
+    font-size:11px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--gris);
+    z-index:1;
+  }
+
+  .folios-tabla td {
+    padding:8px 12px;
+    border-bottom:1px solid var(--borde);
+  }
+
+  .folio-num {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:22px;
+    color:var(--crema);
+  }
+
+/* codigo añadido 30 abr 26 */
+  .folios-tabla-wrap {
+  overflow-y: auto;
+  max-height: 300px; /* ajusta según tu diseño */
+}
+
+  .folio-terminal-pending { color:var(--amarillo); font-size:12px; }
+  .folio-terminal-name { color:var(--verde-online); font-size:12px; font-weight:600; }
+
+  .folio-row-atendiendo td { background:rgba(243,156,18,.06); }
+
+  /* ── SEC4 Terminales matrix ── */
+  #sec4 {
+    border-top:1px solid var(--borde);
+  }
+
+  .sec4-header {
+    background:var(--acero3);
+    padding:8px 14px;
+    border-bottom:2px solid var(--naranja);
+    font-family:'Bebas Neue',sans-serif;
+    font-size:15px;
+    letter-spacing:2px;
+    color:var(--naranja);
+  }
+
+  .terminales-matrix {
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:4px;
+    padding:8px;
+    height:calc(100% - 38px);
+    overflow:hidden;
+  }
+
+  .terminal-cell {
+    display:flex;
+    flex-direction:column;
+    border-radius:8px;
+    overflow:hidden;
+    border:1px solid var(--borde);
+  }
+
+  .terminal-nombre {
+    padding:6px 8px;
+    font-size:clamp(12px,2vw,18px);
+    /*font-size:clamp(9px,1vw,13px);*/
+    font-weight:600;
+    text-align:center;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    transition:background .4s;
+  }
+
+  .terminal-nombre.online { background:rgba(39,174,96,.25); color:#2ECC71; }
+  .terminal-nombre.offline { background:rgba(231,76,60,.2); color:#E74C3C; }
+
+  .terminal-folio {
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(18px,2.5vw,36px);
+    color:var(--crema);
+    background:rgba(0,0,0,.2);
+    padding:4px;
+  }
+
+  /* ── SEC5 Footer ── */
+  #sec5 {
+    grid-column:1/-1;
+    background:var(--acero3);
+    border-top:2px solid var(--naranja);
+    display:flex;
+    align-items:center;
+    padding:0 20px;
+    gap:20px;
+  }
+
+  .footer-logo {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:22px;
+    color:var(--naranja);
+    letter-spacing:4px;
+    flex-shrink:0;
+  }
+
+  .footer-divider {
+    width:1px; height:30px;
+    background:var(--borde);
+  }
+
+  .footer-clock {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:28px;
+    color:var(--crema);
+    letter-spacing:2px;
+    flex-shrink:0;
+  }
+
+  .footer-clima {
+    font-size:14px;
+    color:var(--gris);
+    overflow:hidden;
+    white-space:nowrap;
+  }
+
+  .cintilla-wrap {
+    flex:1;
+    overflow:hidden;
+    position:relative;
+  }
+
+  .cintilla {
+    display:inline-block;
+    white-space:nowrap;
+    animation:cintilla 30s linear infinite;
+    font-size:14px;
+    color:var(--gris);
+  }
+
+  @keyframes cintilla {
+    from { transform:translateX(100%); }
+    to   { transform:translateX(-100%); }
+  }
+
+  /* Scrollbar global */
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-track { background:var(--acero3); }
+  ::-webkit-scrollbar-thumb { background:var(--naranja); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ════════ SEC1: Lista de videos ════════ -->
+  <div class="sec" id="sec1">
+    <div class="sec1-header">🎬 Lista de Reproducción</div>
+    <div class="video-list" id="videoList">
+      <div style="padding:20px;color:var(--gris);font-size:13px">Cargando videos...</div>
+    </div>
+  </div>
+
+  <!-- ════════ SEC2: Video player ════════ -->
+  <div class="sec" id="sec2">
+    <div class="video-overlay-info" id="videoInfo">Sin video seleccionado</div>
+    <video id="videoPlayer"
+      controls
+      controlslist="nofullscreen nodownload"
+      disablePictureInPicture
+    ></video>
+  </div>
+
+  <!-- ════════ SEC3: Folios/Status ════════ -->
+  <div class="sec" id="sec3">
+    <div class="sec3-header">🎫 Estado de Turnos <span id="contadorPendiente" style="font-size:13px;color:var(--amarillo)"></span></div>
+    <div class="folios-tabla-wrap">
+      <table class="folios-tabla">
+        <thead><tr><th>Folio</th><th>Terminal</th></tr></thead>
+        <tbody id="tbFolios">
+          <tr><td colspan="2" style="color:var(--gris);padding:16px">Sin folios activos</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════ SEC4: Matrix terminales ════════ -->
+  <div class="sec" id="sec4">
+    <div class="sec4-header">💻 Terminales en Atención</div>
+    <div class="terminales-matrix" id="terminalesMatrix">
+      <div style="color:var(--gris);font-size:13px;grid-column:1/-1">Cargando terminales...</div>
+    </div>
+  </div>
+
+  <!-- ════════ SEC5: Footer ════════ -->
+  <div class="sec" id="sec5">
+    <div class="footer-logo">🔧 FOFEL</div>
+    <div class="footer-divider"></div>
+    <div class="footer-clock" id="footerClock">00:00:00</div>
+    <div class="footer-divider"></div>
+    <div class="footer-clima" id="footerClima">🌤️ Cargando clima...</div>
+    <div class="footer-divider"></div>
+    <div class="cintilla-wrap">
+      <span class="cintilla" id="cintilla">FOFEL FERRETERÍA — Calidad y servicio en herramientas y materiales para construcción — Tu ferretería de confianza</span>
+    </div>
+  </div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ════════════════════════════════════════
+// SOCKET.IO - Actualizaciones en tiempo real
+// ════════════════════════════════════════
+const socket = io();
+socket.emit('join-vista');
+
+socket.on('nuevo-folio', (data) => {
+  agregarFilaFolio(data);
+  actualizarContador();
+});
+
+socket.on('folio-update', (data) => {
+  actualizarFilaFolio(data);
+  actualizarContador();
+});
+
+socket.on('terminal-update', (data) => {
+  actualizarCeldaTerminal(data);
+});
+
+// ════════════════════════════════════════
+// RELOJ
+// ════════════════════════════════════════
+function actualizarReloj() {
+  const ahora = new Date();
+  const h = String(ahora.getHours()).padStart(2,'0');
+  const m = String(ahora.getMinutes()).padStart(2,'0');
+  const s = String(ahora.getSeconds()).padStart(2,'0');
+  document.getElementById('footerClock').textContent = `${h}:${m}:${s}`;
+}
+setInterval(actualizarReloj, 1000);
+actualizarReloj();
+
+// ════════════════════════════════════════
+// CLIMA
+// ════════════════════════════════════════
+async function cargarClima() {
+  try {
+    const r = await fetch('/api/clima');
+    const data = await r.json();
+    if (data.ok && data.data) {
+      const c = data.data;
+      document.getElementById('footerClima').textContent =
+        `${c.icono} ${c.ciudad || ''} ${c.temp}°C — ${c.descripcion}`;
+    }
+  } catch(e) {}
+}
+cargarClima();
+setInterval(cargarClima, 10 * 60 * 1000); // cada 10 min
+
+// ════════════════════════════════════════
+// VIDEOS
+// ════════════════════════════════════════
+let videos = [];
+let videoIndex = 0;
+const player = document.getElementById('videoPlayer');
+const videoInfo = document.getElementById('videoInfo');
+
+async function cargarVideos() {
+  const r = await fetch('/api/videos');
+  const data = await r.json();
+  videos = (data.ok && data.data) ? data.data : [];
+  renderListaVideos();
+  if (videos.length) reproducirVideo(0);
+}
+
+function renderListaVideos() {
+  const list = document.getElementById('videoList');
+  if (!videos.length) { list.innerHTML = '<div style="padding:20px;color:var(--gris);font-size:13px">Sin videos configurados</div>'; return; }
+  list.innerHTML = videos.map((v,i) => `
+    <div class="video-item ${i===videoIndex?'active':''}" id="vi-${i}" onclick="reproducirVideo(${i})">
+      <div class="video-num">${v.numero}</div>
+      <div class="video-nombre">${v.nombre}</div>
+      <div class="video-play-icon">▶</div>
+    </div>`).join('');
+}
+
+function reproducirVideo(idx) {
+  if (!videos.length) return;
+  videoIndex = idx % videos.length;
+  const v = videos[videoIndex];
+
+  // Actualizar lista visual
+  document.querySelectorAll('.video-item').forEach((el,i) => {
+    el.classList.toggle('active', i === videoIndex);
+  });
+
+  // Scroll al item activo
+  const activeItem = document.getElementById(`vi-${videoIndex}`);
+  if (activeItem) activeItem.scrollIntoView({ behavior:'smooth', block:'nearest' });
+
+  player.src = v.ruta;
+  player.play().catch(()=>{});
+  videoInfo.textContent = `${v.numero}. ${v.nombre}`;
+}
+
+// Auto-siguiente video al terminar
+player.addEventListener('ended', () => {
+  reproducirVideo((videoIndex + 1) % videos.length);
+});
+
+player.addEventListener('error', () => {
+  // Si el video falla, intentar el siguiente
+  setTimeout(() => reproducirVideo((videoIndex + 1) % videos.length), 2000);
+});
+
+// ════════════════════════════════════════
+// FOLIOS
+// ════════════════════════════════════════
+let foliosActivos = {}; // folio -> {status, terminal}
+
+let div = document.getElementById('tbFolios');
+let subiendo = false;
+let velocidad = 2; // Píxeles por paso
+
+/* inicio codigo añadido 20 abr26 */
+function iniciarScrollContinuo(selector, velocidad = 1, pausa = 1500) {
+  const contenedor = document.querySelector(selector);
+  if (!contenedor) return;
+
+  let direccion = 1; // 1 = abajo, -1 = arriba
+  let animando = true;
+  let frameId = null;
+  let pausando = false;
+
+  function scrollStep() {
+    if (!animando || pausando) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = contenedor;
+    const maxScroll = scrollHeight - clientHeight;
+
+    // Si no hay contenido suficiente para hacer scroll
+    if (maxScroll <= 0) {
+      frameId = requestAnimationFrame(scrollStep);
+      return;
+    }
+
+    contenedor.scrollTop += direccion * velocidad;
+
+    // Llegó al fondo
+    if (contenedor.scrollTop >= maxScroll) {
+      contenedor.scrollTop = maxScroll;
+      pausando = true;
+      setTimeout(() => {
+        direccion = -1;
+        pausando = false;
+        frameId = requestAnimationFrame(scrollStep);
+      }, pausa);
+      return;
+    }
+
+    // Llegó al tope
+    if (contenedor.scrollTop <= 0) {
+      contenedor.scrollTop = 0;
+      pausando = true;
+      setTimeout(() => {
+        direccion = 1;
+        pausando = false;
+        frameId = requestAnimationFrame(scrollStep);
+      }, pausa);
+      return;
+    }
+
+    frameId = requestAnimationFrame(scrollStep);
+  }
+
+  // Pausar al pasar el mouse
+  contenedor.addEventListener("mouseenter", () => { animando = false; });
+  contenedor.addEventListener("mouseleave", () => {
+    animando = true;
+    frameId = requestAnimationFrame(scrollStep);
+  });
+
+  // Iniciar
+  frameId = requestAnimationFrame(scrollStep);
+
+  // Retorna función para detener manualmente si se necesita
+  return () => {
+    animando = false;
+    cancelAnimationFrame(frameId);
+  };
+}
+
+// Uso
+iniciarScrollContinuo(".folios-tabla-wrap", 0.8, 2000);
+
+
+/* fin de codigo añadido */
+
+
+async function cargarFolios() {
+  const r = await fetch('/api/folios');
+  const data = await r.json();
+  foliosActivos = {};
+  if (data.ok && data.data) {
+    data.data.forEach(f => {
+      if (f.status_atencion < 2) {
+        foliosActivos[f.folio] = { status: f.status_atencion, terminal: f.terminal_nombre };
+      }
+    });
+  }
+  renderFolios();
+}
+
+function renderFolios() {
+  const tb = document.getElementById('tbFolios');
+  const items = Object.entries(foliosActivos);
+  if (!items.length) {
+    tb.innerHTML = '<tr><td colspan="2" style="color:var(--gris);padding:16px">Sin folios activos</td></tr>';
+    actualizarContador();
+    return;
+  }
+  tb.innerHTML = items.map(([folio, info]) => `
+    <tr class="${info.status===1?'folio-row-atendiendo':''}">
+      <td><div class="folio-num">${folio}</div></td>
+      <td>${info.terminal
+        ? `<span class="folio-terminal-name">▶ ${info.terminal}</span>`
+        : `<span class="folio-terminal-pending">Por atender</span>`}</td>
+    </tr>`).join('');
+  actualizarContador();
+}
+
+function actualizarContador() {
+  const pendientes = Object.values(foliosActivos).filter(f => f.status === 0).length;
+  document.getElementById('contadorPendiente').textContent = pendientes > 0 ? `(${pendientes} en espera)` : '';
+}
+
+function agregarFilaFolio(data) {
+  if (data.status_atencion < 2) {
+    foliosActivos[data.folio] = { status: data.status_atencion, terminal: data.terminal_nombre };
+    renderFolios();
+  }
+}
+
+function actualizarFilaFolio(data) {
+  if (data.status_atencion === 2) {
+    delete foliosActivos[data.folio];
+  } else if (foliosActivos[data.folio] !== undefined) {
+    foliosActivos[data.folio] = { status: data.status_atencion, terminal: data.terminal_nombre };
+  }
+  renderFolios();
+}
+
+// ════════════════════════════════════════
+// TERMINALES MATRIX
+// ════════════════════════════════════════
+let terminales = [];
+
+async function cargarTerminales() {
+  const r = await fetch('/api/terminales');
+  const data = await r.json();
+  terminales = (data.ok && data.data) ? data.data : [];
+  renderTerminales();
+}
+
+function renderTerminales() {
+  const matrix = document.getElementById('terminalesMatrix');
+  if (!terminales.length) {
+    matrix.innerHTML = '<div style="color:var(--gris);font-size:13px;grid-column:1/-1;padding:16px">Sin terminales registradas</div>';
+    return;
+  }
+  matrix.innerHTML = terminales.map(t => `
+    <div class="terminal-cell" id="tc-${t.id}">
+      <div class="terminal-nombre ${t.status}" id="tn-${t.id}">${t.nombre}</div>
+      <div class="terminal-folio" id="tf-${t.id}">${t.status==='online'&&t.folio_actual ? t.folio_actual : ''}</div>
+    </div>`).join('');
+}
+
+function actualizarCeldaTerminal(data) {
+  // Actualizar en array local
+  const idx = terminales.findIndex(t => t.id === data.id);
+  if (idx >= 0) {
+    terminales[idx].status = data.status;
+    terminales[idx].folio_actual = data.folio;
+  }
+
+  // Actualizar DOM
+  const tnEl = document.getElementById(`tn-${data.id}`);
+  const tfEl = document.getElementById(`tf-${data.id}`);
+  if (tnEl) { tnEl.className = `terminal-nombre ${data.status}`; }
+  if (tfEl) { tfEl.textContent = data.status==='online' && data.folio ? data.folio : ''; }
+}
+
+// ════════════════════════════════════════
+// INICIALIZAR
+// ════════════════════════════════════════
+cargarVideos();
+cargarFolios();
+cargarTerminales();
+
+// Recargar folios y terminales periódicamente como fallback
+setInterval(cargarFolios, 30000);
+setInterval(cargarTerminales, 30000);
+</script>
+</body>
+</html>

@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mostrador - FOFEL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --naranja: #E8540A;
+    --verde: #27AE60;
+    --verde-glow: rgba(39,174,96,.35);
+    --rojo: #E74C3C;
+    --rojo-glow: rgba(231,76,60,.35);
+    --acero: #111B25;
+    --acero2: #172130;
+    --acero3: #1E2E3E;
+    --crema: #F5EDD6;
+    --gris: #8B9BAA;
+    --borde: rgba(255,255,255,.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family:'Barlow',sans-serif;
+    background:var(--acero);
+    color:var(--crema);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* HEADER */
+  .header {
+    background:var(--acero2);
+    border-bottom:2px solid var(--naranja);
+    padding:12px 24px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+  }
+  .header-logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:3px; color:var(--naranja); }
+  .header a { color:var(--gris); text-decoration:none; font-size:13px; margin-left:auto; }
+  .header a:hover { color:var(--naranja); }
+
+  /* TERMINAL INFO */
+  .terminal-info {
+    background:var(--acero3);
+    border-bottom:1px solid var(--borde);
+    padding:10px 24px;
+    font-size:13px;
+    color:var(--gris);
+    display:flex;
+    gap:20px;
+    align-items:center;
+  }
+  .term-name { color:var(--crema); font-weight:600; }
+  .term-mac { font-family:monospace; font-size:12px; }
+  .badge-status {
+    padding:3px 14px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:1px;
+  }
+  .badge-online { background:rgba(39,174,96,.15); color:#2ECC71; border:1px solid rgba(39,174,96,.3); }
+  .badge-offline { background:rgba(231,76,60,.15); color:#E74C3C; border:1px solid rgba(231,76,60,.3); }
+
+  /* MAIN */
+  .main {
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:40px 20px;
+    gap:32px;
+  }
+
+  /* BOTÓN PRINCIPAL */
+  .btn-principal {
+    width:clamp(240px,35vw,340px);
+    height:clamp(240px,35vw,340px);
+    border-radius:50%;
+    border:none;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    font-family:'Barlow',sans-serif;
+    transition:all .25s ease;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .btn-principal::before {
+    content:'';
+    position:absolute;
+    top:-50%;left:-50%;
+    width:200%;height:200%;
+    background:radial-gradient(circle, rgba(255,255,255,.12) 0%, transparent 60%);
+    pointer-events:none;
+  }
+
+  .btn-offline {
+    background:radial-gradient(circle at 35% 35%, #4a5c6a, #2E4057 60%, #1E2E3E);
+    box-shadow: 0 0 0 8px rgba(231,76,60,.12), 0 0 0 16px rgba(231,76,60,.06), 0 20px 60px rgba(0,0,0,.5);
+  }
+  .btn-offline:hover {
+    box-shadow: 0 0 0 12px rgba(231,76,60,.2), 0 0 0 24px rgba(231,76,60,.08), 0 20px 80px rgba(0,0,0,.6);
+    transform:scale(1.02);
+  }
+
+  .btn-online {
+    background:radial-gradient(circle at 35% 35%, #3EBA78, #27AE60 60%, #1B7A43);
+    box-shadow: 0 0 0 8px var(--verde-glow), 0 0 0 16px rgba(39,174,96,.1), 0 20px 60px rgba(39,174,96,.3);
+    animation:pulseVerde 2s ease infinite;
+  }
+  .btn-online:hover { transform:scale(1.02); }
+
+  @keyframes pulseVerde {
+    0%,100% { box-shadow: 0 0 0 8px rgba(39,174,96,.3), 0 0 0 16px rgba(39,174,96,.1), 0 20px 60px rgba(39,174,96,.3); }
+    50%      { box-shadow: 0 0 0 14px rgba(39,174,96,.4), 0 0 0 28px rgba(39,174,96,.12), 0 20px 80px rgba(39,174,96,.4); }
+  }
+
+  .btn-principal:active { transform:scale(.93) !important; }
+  .btn-principal:disabled { opacity:.5; cursor:wait; animation:none !important; }
+
+  .btn-icon-main { font-size:clamp(48px,7vw,72px); }
+
+  .btn-estado {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(22px,3.5vw,34px);
+    letter-spacing:3px;
+    color:#fff;
+    text-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
+
+  .btn-folio {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(32px,5vw,56px);
+    color:#fff;
+    line-height:1;
+    text-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
+
+  .btn-hint {
+    font-size:clamp(11px,1.5vw,14px);
+    color:rgba(255,255,255,.6);
+    text-align:center;
+    max-width:200px;
+  }
+
+  /* COLA DE ESPERA */
+  .queue-panel {
+    width:100%;
+    max-width:500px;
+    background:var(--acero2);
+    border:1px solid var(--borde);
+    border-radius:16px;
+    overflow:hidden;
+  }
+
+  .queue-header {
+    background:var(--acero3);
+    padding:12px 18px;
+    font-family:'Bebas Neue',sans-serif;
+    font-size:16px;
+    letter-spacing:2px;
+    color:var(--naranja);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+
+  .queue-body { max-height:200px; overflow-y:auto; }
+
+  .queue-item {
+    padding:10px 18px;
+    border-bottom:1px solid var(--borde);
+    display:flex;
+    gap:16px;
+    align-items:center;
+    font-size:14px;
+  }
+  .queue-folio {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:24px;
+    color:var(--crema);
+    min-width:50px;
+  }
+  .queue-hora { color:var(--gris); font-size:12px; }
+  .queue-empty { padding:16px 18px; color:var(--gris); font-size:13px; }
+
+  /* MENSAJE */
+  .msg-bar {
+    padding:12px 24px;
+    text-align:center;
+    font-size:14px;
+    border-top:1px solid var(--borde);
+    min-height:48px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* ERROR modal */
+  .error-overlay {
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.8);
+    display:flex;align-items:center;justify-content:center;
+    z-index:100;
+    opacity:0;pointer-events:none;
+    transition:opacity .3s;
+  }
+  .error-overlay.show { opacity:1;pointer-events:all; }
+  .error-box {
+    background:var(--acero2);
+    border:1px solid var(--rojo);
+    border-radius:16px;
+    padding:32px;
+    max-width:400px;
+    text-align:center;
+  }
+  .error-box h3 { color:var(--rojo); font-family:'Bebas Neue',sans-serif; font-size:28px; margin-bottom:12px; }
+  .error-box p { color:var(--gris); font-size:14px; line-height:1.6; margin-bottom:20px; }
+  .error-box button { background:var(--rojo); color:#fff; border:none; border-radius:8px; padding:10px 24px; cursor:pointer; font-size:14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">🔧 FOFEL — Mostrador</div>
+  <a href="/">← Inicio</a>
+</div>
+
+<div class="terminal-info" id="terminalInfo">
+  <span>Terminal: <span class="term-name" id="termNombre">Detectando...</span></span>
+  <span class="term-mac" id="termMac">MAC: detectando...</span>
+  <span class="badge-status badge-offline" id="termBadge">OFFLINE</span>
+</div>
+
+<div class="main">
+  <!-- BOTÓN PRINCIPAL TOGGLE -->
+  <button class="btn-principal btn-offline" id="btnPrincipal" onclick="toggleEstado()" disabled>
+    <span class="btn-icon-main" id="btnIcono">🔴</span>
+    <span class="btn-estado" id="btnEstado">OFFLINE</span>
+    <span class="btn-folio" id="btnFolio" style="display:none"></span>
+    <span class="btn-hint" id="btnHint">Presione para iniciar atención</span>
+  </button>
+
+  <!-- COLA DE ESPERA -->
+  <div class="queue-panel">
+    <div class="queue-header">
+      <span>🎫 Turnos en Espera</span>
+      <button onclick="cargarCola()" style="background:none;border:none;color:var(--gris);cursor:pointer;font-size:12px">🔄</button>
+    </div>
+    <div class="queue-body" id="queueBody">
+      <div class="queue-empty">Cargando cola...</div>
+    </div>
+  </div>
+</div>
+
+<div class="msg-bar" id="msgBar"></div>
+
+<!-- ERROR MODAL -->
+<div class="error-overlay" id="errorOverlay">
+  <div class="error-box">
+    <h3>❌ Error</h3>
+    <p id="errorMsg">No se encontró esta MAC en el sistema. Registre la terminal en /inicio → Terminales.</p>
+    <button onclick="document.getElementById('errorOverlay').classList.remove('show')">Entendido</button>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ════════════════════════════════════════
+// DETECTAR MAC DEL CLIENTE
+// ════════════════════════════════════════
+// Nota: los navegadores no exponen la MAC directamente por seguridad.
+// La leemos desde el servidor (que conoce la MAC de la máquina donde corre Node).
+// En producción multi-equipo, se puede almacenar la MAC en localStorage al registrar.
+
+let macLocal = localStorage.getItem('fofel_mac') || '';
+let estadoActual = 'offline';
+let folioActual = null;
+
+async function detectarMAC() {
+  // Primero intentar leerla del servidor (solo funciona si el mostrador corre en la misma máquina)
+  // En entornos reales, la MAC se registra manualmente en /inicio y se guarda en localStorage
+  try {
+    const r = await fetch('/api/terminales/mac-local');
+    const data = await r.json();
+    if (data.ok && data.data && data.data.length) {
+      if (!macLocal) {
+        macLocal = data.data[0].mac;
+        localStorage.setItem('fofel_mac', macLocal);
+      }
+    }
+  } catch(e) {}
+
+  if (!macLocal) {
+    // Pedir al usuario que ingrese la MAC
+    const mac = prompt('No se detectó la MAC de este equipo.\nIngrese la dirección MAC registrada para este mostrador\n(formato: xx:xx:xx:xx:xx:xx):');
+    if (mac) {
+      macLocal = mac.toLowerCase().trim();
+      localStorage.setItem('fofel_mac', macLocal);
+    } else {
+      showMsg('⚠️ Sin MAC configurada. Configure en /inicio → Terminales', 'warn');
+      return;
+    }
+  }
+
+  document.getElementById('termMac').textContent = 'MAC: ' + macLocal;
+  await cargarInfoTerminal();
+}
+
+async function cargarInfoTerminal() {
+  if (!macLocal) return;
+  try {
+    const r = await fetch(`/api/mostrador/terminal/${encodeURIComponent(macLocal)}`);
+    const data = await r.json();
+    if (data.ok && data.data) {
+      const t = data.data;
+      document.getElementById('termNombre').textContent = t.nombre;
+      estadoActual = t.status;
+      folioActual = t.folio_actual;
+      actualizarUI();
+      document.getElementById('btnPrincipal').disabled = false;
+    } else {
+      document.getElementById('termNombre').textContent = 'No registrada';
+      document.getElementById('errorMsg').textContent = `La MAC ${macLocal} no está registrada en el sistema. Regístrela en /inicio → Terminales.`;
+      document.getElementById('errorOverlay').classList.add('show');
+    }
+  } catch(e) {
+    showMsg('❌ Error de conexión', 'err');
+  }
+}
+
+function actualizarUI() {
+  const btn = document.getElementById('btnPrincipal');
+  const badge = document.getElementById('termBadge');
+
+  if (estadoActual === 'online') {
+    btn.className = 'btn-principal btn-online';
+    document.getElementById('btnIcono').textContent = '🟢';
+    document.getElementById('btnEstado').textContent = 'ONLINE';
+    document.getElementById('btnHint').textContent = 'Presione para terminar atención';
+    badge.className = 'badge-status badge-online';
+    badge.textContent = 'ONLINE';
+    if (folioActual) {
+      document.getElementById('btnFolio').style.display = 'block';
+      document.getElementById('btnFolio').textContent = '#' + folioActual;
+    } else {
+      document.getElementById('btnFolio').style.display = 'none';
+    }
+  } else {
+    btn.className = 'btn-principal btn-offline';
+    document.getElementById('btnIcono').textContent = '🔴';
+    document.getElementById('btnEstado').textContent = 'OFFLINE';
+    document.getElementById('btnHint').textContent = 'Presione para tomar el siguiente turno';
+    document.getElementById('btnFolio').style.display = 'none';
+    badge.className = 'badge-status badge-offline';
+    badge.textContent = 'OFFLINE';
+  }
+}
+
+// ════════════════════════════════════════
+// TOGGLE ONLINE / OFFLINE
+// ════════════════════════════════════════
+async function toggleEstado() {
+  const btn = document.getElementById('btnPrincipal');
+  btn.disabled = true;
+
+  try {
+    const r = await fetch('/api/mostrador/toggle', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ mac: macLocal })
+    });
+    const data = await r.json();
+
+    if (data.ok) {
+      estadoActual = data.status;
+      folioActual = data.folio;
+      actualizarUI();
+
+      if (data.status === 'online') {
+        if (data.folio) showMsg(`✅ Atendiendo turno #${data.folio} — ${document.getElementById('termNombre').textContent}`, 'ok');
+        else showMsg(`🟢 Terminal en línea — sin folios pendientes`, 'ok');
+      } else {
+        showMsg(`🔴 Terminal fuera de línea — turno finalizado`, 'warn');
+      }
+      cargarCola();
+    } else {
+      showMsg('❌ ' + data.error, 'err');
+    }
+  } catch(e) {
+    showMsg('❌ Error de conexión', 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ════════════════════════════════════════
+// COLA DE ESPERA
+// ════════════════════════════════════════
+async function cargarCola() {
+  try {
+    const r = await fetch('/api/folios/pendientes');
+    const data = await r.json();
+    const body = document.getElementById('queueBody');
+    if (!data.ok || !data.data.length) {
+      body.innerHTML = '<div class="queue-empty">Sin turnos en espera 🎉</div>';
+      return;
+    }
+    body.innerHTML = data.data.map(f => {
+      const hora = new Date(f.fecha_hora_toma);
+      const horaStr = `${String(hora.getHours()).padStart(2,'0')}:${String(hora.getMinutes()).padStart(2,'0')}`;
+      return `<div class="queue-item">
+        <div class="queue-folio">${f.folio}</div>
+        <div>
+          <div style="font-size:13px">${f.nombre_sucursal}</div>
+          <div class="queue-hora">⏰ ${horaStr} hrs</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+// ════════════════════════════════════════
+// MENSAJES
+// ════════════════════════════════════════
+function showMsg(msg, tipo='ok') {
+  const el = document.getElementById('msgBar');
+  const colors = { ok:'#2ECC71', err:'#E74C3C', warn:'#F39C12' };
+  el.textContent = msg;
+  el.style.color = colors[tipo] || colors.ok;
+  setTimeout(() => { el.textContent = ''; el.style.color = ''; }, 5000);
+}
+
+// ════════════════════════════════════════
+// SOCKET.IO
+// ════════════════════════════════════════
+const socket = io();
+socket.emit('join-mostrador', macLocal);
+
+socket.on('nuevo-folio', () => cargarCola());
+socket.on('folio-update', () => cargarCola());
+
+// ════════════════════════════════════════
+// INICIALIZAR
+// ════════════════════════════════════════
+detectarMAC();
+cargarCola();
+setInterval(cargarCola, 15000);
+</script>
+</body>
+</html>

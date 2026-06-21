@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mostrador - FOFEL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --naranja: #E8540A;
+    --verde: #27AE60;
+    --verde-glow: rgba(39,174,96,.35);
+    --rojo: #E74C3C;
+    --rojo-glow: rgba(231,76,60,.35);
+    --acero: #111B25;
+    --acero2: #172130;
+    --acero3: #1E2E3E;
+    --crema: #F5EDD6;
+    --gris: #8B9BAA;
+    --borde: rgba(255,255,255,.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family:'Barlow',sans-serif;
+    background:var(--acero);
+    color:var(--crema);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* HEADER */
+  .header {
+    background:var(--acero2);
+    border-bottom:2px solid var(--naranja);
+    padding:12px 24px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+  }
+  .header-logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:3px; color:var(--naranja); }
+  .header a { color:var(--gris); text-decoration:none; font-size:13px; margin-left:auto; }
+  .header a:hover { color:var(--naranja); }
+
+  /* TERMINAL INFO */
+  .terminal-info {
+    background:var(--acero3);
+    border-bottom:1px solid var(--borde);
+    padding:10px 24px;
+    font-size:13px;
+    color:var(--gris);
+    display:flex;
+    gap:20px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .term-name { color:var(--crema); font-weight:600; }
+  .term-mac { font-family:monospace; font-size:12px; }
+  .badge-status {
+    padding:3px 14px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:1px;
+  }
+  .badge-online  { background:rgba(39,174,96,.15); color:#2ECC71; border:1px solid rgba(39,174,96,.3); }
+  .badge-offline { background:rgba(231,76,60,.15); color:#E74C3C; border:1px solid rgba(231,76,60,.3); }
+
+  /* Badge de voz */
+  .badge-voz {
+    padding:3px 10px;
+    border-radius:20px;
+    font-size:11px;
+    letter-spacing:.5px;
+    margin-left:auto;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    transition:all .4s;
+  }
+  .badge-voz.ok  { background:rgba(39,174,96,.12); color:#2ECC71;  border:1px solid rgba(39,174,96,.25); }
+  .badge-voz.off { background:rgba(139,155,170,.1); color:var(--gris); border:1px solid var(--borde); }
+
+  /* MAIN */
+  .main {
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:40px 20px;
+    gap:32px;
+  }
+
+  /* BOTÓN PRINCIPAL */
+  .btn-principal {
+    width:clamp(240px,35vw,340px);
+    height:clamp(240px,35vw,340px);
+    border-radius:50%;
+    border:none;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    font-family:'Barlow',sans-serif;
+    transition:all .25s ease;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .btn-principal::before {
+    content:'';
+    position:absolute;
+    top:-50%;left:-50%;
+    width:200%;height:200%;
+    background:radial-gradient(circle, rgba(255,255,255,.12) 0%, transparent 60%);
+    pointer-events:none;
+  }
+
+  .btn-offline {
+    background:radial-gradient(circle at 35% 35%, #4a5c6a, #2E4057 60%, #1E2E3E);
+    box-shadow: 0 0 0 8px rgba(231,76,60,.12), 0 0 0 16px rgba(231,76,60,.06), 0 20px 60px rgba(0,0,0,.5);
+  }
+  .btn-offline:hover {
+    box-shadow: 0 0 0 12px rgba(231,76,60,.2), 0 0 0 24px rgba(231,76,60,.08), 0 20px 80px rgba(0,0,0,.6);
+    transform:scale(1.02);
+  }
+
+  .btn-sin-turnos {
+    background:radial-gradient(circle at 35% 35%, #3a3a3a, #222 60%, #111);
+    color:#666; border:3px solid #444;
+    box-shadow:0 8px 30px rgba(0,0,0,.4);
+    cursor:default;
+    animation:none !important;
+  }
+  .btn-sin-turnos:hover {
+    transform:none !important;
+    box-shadow:0 8px 30px rgba(0,0,0,.4) !important;
+  }
+
+  .btn-online {
+    background:radial-gradient(circle at 35% 35%, #3EBA78, #27AE60 60%, #1B7A43);
+    box-shadow: 0 0 0 8px var(--verde-glow), 0 0 0 16px rgba(39,174,96,.1), 0 20px 60px rgba(39,174,96,.3);
+    animation:pulseVerde 2s ease infinite;
+  }
+  .btn-online:hover { transform:scale(1.02); }
+
+  @keyframes pulseVerde {
+    0%,100% { box-shadow: 0 0 0 8px rgba(39,174,96,.3), 0 0 0 16px rgba(39,174,96,.1), 0 20px 60px rgba(39,174,96,.3); }
+    50%      { box-shadow: 0 0 0 14px rgba(39,174,96,.4), 0 0 0 28px rgba(39,174,96,.12), 0 20px 80px rgba(39,174,96,.4); }
+  }
+
+  .btn-principal:active { transform:scale(.93) !important; }
+  .btn-principal:disabled { opacity:.5; cursor:wait; animation:none !important; }
+
+  .btn-icon-main { font-size:clamp(48px,7vw,72px); }
+
+  .btn-estado {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(22px,3.5vw,34px);
+    letter-spacing:3px;
+    color:#fff;
+    text-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
+
+  .btn-folio {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(32px,5vw,56px);
+    color:#fff;
+    line-height:1;
+    text-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
+
+  .btn-hint {
+    font-size:clamp(11px,1.5vw,14px);
+    color:rgba(255,255,255,.6);
+    text-align:center;
+    max-width:200px;
+  }
+
+  /* COLA DE ESPERA */
+  .queue-panel {
+    width:100%;
+    max-width:500px;
+    background:var(--acero2);
+    border:1px solid var(--borde);
+    border-radius:16px;
+    overflow:hidden;
+  }
+
+  .queue-header {
+    background:var(--acero3);
+    padding:12px 18px;
+    font-family:'Bebas Neue',sans-serif;
+    font-size:16px;
+    letter-spacing:2px;
+    color:var(--naranja);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+
+  .queue-body { max-height:200px; overflow-y:auto; }
+
+  .queue-item {
+    padding:10px 18px;
+    border-bottom:1px solid var(--borde);
+    display:flex;
+    gap:16px;
+    align-items:center;
+    font-size:14px;
+  }
+  .queue-folio {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:24px;
+    color:var(--crema);
+    min-width:50px;
+  }
+  .queue-hora { color:var(--gris); font-size:12px; }
+  .queue-empty { padding:16px 18px; color:var(--gris); font-size:13px; }
+
+  /* MENSAJE */
+  .msg-bar {
+    padding:12px 24px;
+    text-align:center;
+    font-size:14px;
+    border-top:1px solid var(--borde);
+    min-height:48px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* ERROR modal */
+  .error-overlay {
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.8);
+    display:flex;align-items:center;justify-content:center;
+    z-index:100;
+    opacity:0;pointer-events:none;
+    transition:opacity .3s;
+  }
+  .error-overlay.show { opacity:1;pointer-events:all; }
+  .error-box {
+    background:var(--acero2);
+    border:1px solid var(--rojo);
+    border-radius:16px;
+    padding:32px;
+    max-width:400px;
+    text-align:center;
+  }
+  .error-box h3 { color:var(--rojo); font-family:'Bebas Neue',sans-serif; font-size:28px; margin-bottom:12px; }
+  .error-box p { color:var(--gris); font-size:14px; line-height:1.6; margin-bottom:20px; }
+  .error-box button { background:var(--rojo); color:#fff; border:none; border-radius:8px; padding:10px 24px; cursor:pointer; font-size:14px; }
+
+  /* ══════════════════════════════════════════
+     OVERLAY DE ANUNCIO (NUEVO)
+  ══════════════════════════════════════════ */
+  .anuncio-overlay {
+    position:fixed; inset:0; z-index:200;
+    background:rgba(5,10,18,.85);
+    backdrop-filter:blur(7px);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none;
+    transition:opacity .35s ease;
+  }
+  .anuncio-overlay.show { opacity:1; pointer-events:auto; }
+
+  .anuncio-card {
+    background:linear-gradient(150deg, #1a2a3a 0%, #0e1a24 100%);
+    border:2px solid var(--naranja);
+    border-radius:22px;
+    padding:2.6rem 3rem;
+    text-align:center;
+    max-width:480px;
+    width:90%;
+    box-shadow:0 0 80px rgba(232,84,10,.25), 0 24px 64px rgba(0,0,0,.65);
+    transform:scale(.82) translateY(18px);
+    transition:transform .4s cubic-bezier(.175,.885,.32,1.275);
+  }
+  .anuncio-overlay.show .anuncio-card { transform:scale(1) translateY(0); }
+
+  .anuncio-icono {
+    font-size:2.8rem;
+    display:block;
+    margin-bottom:.7rem;
+    animation:iconPop .45s cubic-bezier(.175,.885,.32,1.275);
+  }
+  @keyframes iconPop { from{transform:scale(0) rotate(-15deg)} to{transform:scale(1) rotate(0)} }
+
+  .anuncio-turno-lbl {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:.95rem;
+    letter-spacing:5px;
+    color:var(--gris);
+    text-transform:uppercase;
+  }
+  .anuncio-folio {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:5.5rem;
+    line-height:1;
+    color:var(--naranja);
+    text-shadow:0 0 40px rgba(232,84,10,.55);
+    letter-spacing:4px;
+  }
+  .anuncio-sep { width:56px; height:2px; background:var(--borde); margin:1rem auto; }
+  .anuncio-frase {
+    font-size:1.05rem;
+    color:var(--gris);
+    font-style:italic;
+    line-height:1.55;
+  }
+  .anuncio-mostrador {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:1.6rem;
+    letter-spacing:2px;
+    color:#2ECC71;
+    margin-top:.4rem;
+  }
+
+  /* Onda de audio animada */
+  .onda {
+    display:flex; align-items:flex-end; justify-content:center;
+    gap:4px; height:38px; margin:1.1rem 0 0;
+  }
+  .onda-bar {
+    width:5px; border-radius:3px;
+    background:var(--naranja);
+    animation:ondaAnim .7s ease-in-out infinite alternate;
+  }
+  .onda-bar:nth-child(1){height:10px;animation-delay:0s}
+  .onda-bar:nth-child(2){height:26px;animation-delay:.1s}
+  .onda-bar:nth-child(3){height:18px;animation-delay:.2s}
+  .onda-bar:nth-child(4){height:34px;animation-delay:.3s}
+  .onda-bar:nth-child(5){height:22px;animation-delay:.15s}
+  .onda-bar:nth-child(6){height:14px;animation-delay:.25s}
+  .onda-bar:nth-child(7){height:28px;animation-delay:.05s}
+  @keyframes ondaAnim { from{transform:scaleY(.25)} to{transform:scaleY(1)} }
+  .onda.silencio .onda-bar { animation:none; transform:scaleY(.15); opacity:.25; }
+
+  /* ══════════════════════════════════════════
+     MODAL OPCIONES: TERMINAR / TRANSFERIR
+  ══════════════════════════════════════════ */
+  .opciones-overlay {
+    position:fixed; inset:0; z-index:300;
+    background:rgba(5,10,18,.88);
+    backdrop-filter:blur(8px);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none;
+    transition:opacity .3s ease;
+  }
+  .opciones-overlay.show { opacity:1; pointer-events:auto; }
+
+  .opciones-card {
+    background:linear-gradient(150deg, #1a2a3a 0%, #0e1a24 100%);
+    border:2px solid var(--naranja);
+    border-radius:22px;
+    padding:2.2rem 2.5rem;
+    width:90%; max-width:520px;
+    box-shadow:0 0 80px rgba(232,84,10,.25), 0 24px 64px rgba(0,0,0,.7);
+    transform:scale(.88) translateY(16px);
+    transition:transform .35s cubic-bezier(.175,.885,.32,1.275);
+  }
+  .opciones-overlay.show .opciones-card { transform:scale(1) translateY(0); }
+
+  .opciones-header {
+    text-align:center;
+    margin-bottom:1.6rem;
+  }
+  .opciones-header .op-icono { font-size:2rem; display:block; margin-bottom:.5rem; }
+  .opciones-header .op-turno-lbl {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:.85rem; letter-spacing:4px; color:var(--gris);
+  }
+  .opciones-header .op-turno-num {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:4rem; line-height:1;
+    color:var(--naranja);
+    text-shadow:0 0 30px rgba(232,84,10,.5);
+    letter-spacing:4px;
+  }
+  .opciones-header .op-terminal {
+    font-size:.9rem; color:var(--gris); margin-top:.2rem;
+  }
+
+  /* Botones de acción principal */
+  .opciones-acciones {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-bottom:1.4rem;
+  }
+  .op-btn {
+    border:none; border-radius:14px;
+    padding:1.1rem .8rem;
+    cursor:pointer;
+    display:flex; flex-direction:column;
+    align-items:center; gap:.5rem;
+    font-family:'Barlow',sans-serif;
+    transition:all .2s;
+  }
+  .op-btn .op-btn-icon { font-size:1.8rem; }
+  .op-btn .op-btn-label {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:1.1rem; letter-spacing:2px;
+  }
+  .op-btn .op-btn-desc { font-size:.75rem; opacity:.7; text-align:center; }
+
+  .op-btn-terminar {
+    background:rgba(231,76,60,.15);
+    border:2px solid rgba(231,76,60,.4);
+    color:#E74C3C;
+  }
+  .op-btn-terminar:hover {
+    background:rgba(231,76,60,.25);
+    border-color:var(--rojo);
+    transform:translateY(-2px);
+    box-shadow:0 8px 24px rgba(231,76,60,.2);
+  }
+
+  .op-btn-transferir {
+    background:rgba(52,152,219,.15);
+    border:2px solid rgba(52,152,219,.4);
+    color:#3498DB;
+  }
+  .op-btn-transferir:hover {
+    background:rgba(52,152,219,.25);
+    border-color:#3498DB;
+    transform:translateY(-2px);
+    box-shadow:0 8px 24px rgba(52,152,219,.2);
+  }
+
+  /* ── BOTÓN PAUSAR ── */
+  .op-btn-pausar {
+    background:rgba(243,156,18,.15);
+    border:2px solid rgba(243,156,18,.4);
+    color:#F39C12;
+  }
+  .op-btn-pausar:hover {
+    background:rgba(243,156,18,.25);
+    border-color:#F39C12;
+    transform:translateY(-2px);
+    box-shadow:0 8px 24px rgba(243,156,18,.2);
+  }
+
+  /* ── PANEL TURNOS EN PAUSA ── */
+  .pausados-panel {
+    width:100%; max-width:500px;
+    background:var(--acero2);
+    border:1px solid rgba(243,156,18,.3);
+    border-radius:16px; overflow:hidden;
+    display:none;
+  }
+  .pausados-panel.visible { display:block; }
+  .pausados-header {
+    background:var(--acero3); padding:10px 18px;
+    font-family:'Bebas Neue',sans-serif; font-size:15px;
+    letter-spacing:2px; color:#F39C12;
+    display:flex; justify-content:space-between; align-items:center;
+    border-bottom:1px solid rgba(243,156,18,.2);
+  }
+  .pausados-body { max-height:180px; overflow-y:auto; }
+  .pausado-item {
+    padding:10px 18px; border-bottom:1px solid var(--borde);
+    display:flex; gap:12px; align-items:center; font-size:13px;
+  }
+  .pausado-item:last-child { border-bottom:none; }
+  .pausado-folio {
+    font-family:'Bebas Neue',sans-serif; font-size:22px;
+    color:#F39C12; min-width:48px;
+  }
+  .pausado-info { flex:1; }
+  .pausado-hora { color:var(--gris); font-size:11px; margin-top:2px; }
+  .btn-retomar {
+    background:rgba(243,156,18,.2); border:1px solid rgba(243,156,18,.5);
+    color:#F39C12; border-radius:8px; padding:5px 12px;
+    font-family:'Bebas Neue',sans-serif; font-size:.85rem;
+    letter-spacing:1px; cursor:pointer; transition:all .15s; white-space:nowrap;
+  }
+  .btn-retomar:hover { background:rgba(243,156,18,.35); box-shadow:0 0 10px rgba(243,156,18,.3); }
+
+  /* Panel de transferencia */
+  .transferir-panel {
+    display:none;
+    border-top:1px solid var(--borde);
+    padding-top:1.2rem;
+    margin-top:.2rem;
+  }
+  .transferir-panel.show { display:block; }
+
+  .transferir-titulo {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:1rem; letter-spacing:3px;
+    color:var(--gris); text-transform:uppercase;
+    margin-bottom:.9rem; text-align:center;
+  }
+
+  .terminales-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(130px,1fr));
+    gap:8px;
+    max-height:200px;
+    overflow-y:auto;
+    margin-bottom:1rem;
+  }
+  .terminales-grid::-webkit-scrollbar { width:4px; }
+  .terminales-grid::-webkit-scrollbar-thumb { background:var(--borde); border-radius:2px; }
+
+  .term-chip {
+    background:var(--acero3);
+    border:2px solid var(--borde);
+    border-radius:10px;
+    padding:.7rem .6rem;
+    cursor:pointer;
+    text-align:center;
+    transition:all .2s;
+  }
+  .term-chip:hover {
+    border-color:#3498DB;
+    background:rgba(52,152,219,.1);
+  }
+  .term-chip.selected {
+    border-color:#3498DB;
+    background:rgba(52,152,219,.18);
+    box-shadow:0 0 12px rgba(52,152,219,.3);
+  }
+  .term-chip .tc-nombre {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:1rem; letter-spacing:1px;
+    color:var(--crema);
+  }
+  .term-chip .tc-estado {
+    font-size:.72rem; color:var(--gris); margin-top:.2rem;
+  }
+  .term-chip-vacia { color:var(--gris); font-size:13px; text-align:center; padding:.8rem; grid-column:1/-1; }
+
+  .transferir-confirmar {
+    width:100%;
+    padding:.8rem;
+    background:#3498DB; color:#fff;
+    border:none; border-radius:10px;
+    font-family:'Bebas Neue',sans-serif;
+    font-size:1.1rem; letter-spacing:2px;
+    cursor:pointer; transition:all .2s;
+    opacity:.5; pointer-events:none;
+  }
+  .transferir-confirmar.activo {
+    opacity:1; pointer-events:auto;
+  }
+  .transferir-confirmar.activo:hover {
+    background:#2980b9;
+    box-shadow:0 4px 16px rgba(52,152,219,.4);
+  }
+
+  /* Botón cancelar del modal */
+  .op-cancelar {
+    display:block; width:100%; margin-top:.8rem;
+    background:none; border:1px solid var(--borde);
+    border-radius:8px; color:var(--gris);
+    padding:.55rem; cursor:pointer;
+    font-size:13px; transition:all .2s;
+  }
+  .op-cancelar:hover { border-color:var(--naranja); color:var(--naranja); }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">🔧 FOFEL — Mostrador</div>
+  <a href="/">← Inicio</a>
+  <button onclick="olvidarMAC()" title="Cambiar terminal / MAC" style="
+    margin-left:8px; background:none; border:1px solid var(--borde);
+    border-radius:6px; color:var(--gris); font-size:12px;
+    padding:4px 10px; cursor:pointer; transition:all .2s;
+  " onmouseover="this.style.borderColor='var(--naranja)';this.style.color='var(--naranja)'"
+     onmouseout="this.style.borderColor='var(--borde)';this.style.color='var(--gris)'">
+    🔄 Cambiar terminal
+  </button>
+</div>
+
+<div class="terminal-info" id="terminalInfo">
+  <span>Terminal: <span class="term-name" id="termNombre">Detectando...</span></span>
+  <span class="term-mac" id="termMac">MAC: detectando...</span>
+  <span class="badge-status badge-offline" id="termBadge">OFFLINE</span>
+  <span class="badge-voz off" id="vozBadge">🔇 Voz: detectando...</span>
+</div>
+
+<div class="main">
+  <!-- BOTÓN PRINCIPAL TOGGLE -->
+  <button class="btn-principal btn-offline" id="btnPrincipal" onclick="accionPrincipal()" disabled>
+    <span class="btn-icon-main" id="btnIcono">🔴</span>
+    <span class="btn-estado" id="btnEstado">OFFLINE</span>
+    <span class="btn-folio" id="btnFolio" style="display:none"></span>
+    <span class="btn-hint" id="btnHint">Presione para iniciar atención</span>
+  </button>
+
+  <!-- COLA DE ESPERA -->
+  <div class="queue-panel">
+    <div class="queue-header">
+      <span>🎫 Turnos en Espera</span>
+      <button onclick="cargarCola()" style="background:none;border:none;color:var(--gris);cursor:pointer;font-size:12px">🔄</button>
+    </div>
+    <div class="queue-body" id="queueBody">
+      <div class="queue-empty">Cargando cola...</div>
+    </div>
+  </div>
+
+  <!-- TURNOS EN PAUSA -->
+  <div class="pausados-panel" id="pausadosPanel">
+    <div class="pausados-header">
+      <span>⏸ Turnos en Pausa</span>
+      <span id="pausadosCount" style="font-size:12px;color:var(--gris)"></span>
+    </div>
+    <div class="pausados-body" id="pausadosBody"></div>
+  </div>
+</div>
+
+<div class="msg-bar" id="msgBar"></div>
+
+<!-- ERROR MODAL -->
+<div class="error-overlay" id="errorOverlay">
+  <div class="error-box">
+    <h3>❌ Error</h3>
+    <p id="errorMsg">No se encontró esta MAC en el sistema. Registre la terminal en /inicio → Terminales.</p>
+    <button onclick="document.getElementById('errorOverlay').classList.remove('show')">Entendido</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     OVERLAY DE ANUNCIO DE VOZ (NUEVO)
+════════════════════════════════════════════ -->
+<div class="anuncio-overlay" id="anuncioOverlay">
+  <div class="anuncio-card">
+    <span class="anuncio-icono">📢</span>
+    <div class="anuncio-turno-lbl">Turno número</div>
+    <div class="anuncio-folio" id="anuncioFolio">—</div>
+    <div class="anuncio-sep"></div>
+    <div class="anuncio-frase">Pase por favor a</div>
+    <div class="anuncio-mostrador" id="anuncioMostrador">—</div>
+    <div class="onda" id="anuncioOnda">
+      <div class="onda-bar"></div><div class="onda-bar"></div>
+      <div class="onda-bar"></div><div class="onda-bar"></div>
+      <div class="onda-bar"></div><div class="onda-bar"></div>
+      <div class="onda-bar"></div>
+    </div>
+    <div class="anuncio-prog">
+      <div class="anuncio-prog-fill" id="anuncioFill"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     MODAL OPCIONES: TERMINAR ATENCIÓN / TRANSFERIR TURNO
+════════════════════════════════════════════════════ -->
+<div class="opciones-overlay" id="opcionesOverlay">
+  <div class="opciones-card">
+
+    <!-- Encabezado: turno actual -->
+    <div class="opciones-header">
+      <span class="op-icono">🎫</span>
+      <div class="op-turno-lbl">Atendiendo turno</div>
+      <div class="op-turno-num" id="opTurnoNum">—</div>
+      <div class="op-terminal" id="opTerminalNombre">—</div>
+    </div>
+
+    <!-- Tres botones de acción -->
+    <div class="opciones-acciones" style="grid-template-columns:1fr 1fr 1fr;">
+      <button class="op-btn op-btn-terminar" onclick="ejecutarTerminar()">
+        <span class="op-btn-icon">✅</span>
+        <span class="op-btn-label">Terminar</span>
+        <span class="op-btn-desc">Finalizar atención y liberar terminal</span>
+      </button>
+      <button class="op-btn op-btn-pausar" onclick="ejecutarPausar()">
+        <span class="op-btn-icon">⏸</span>
+        <span class="op-btn-label">Pausar</span>
+        <span class="op-btn-desc">Dejar en espera y tomar otro turno</span>
+      </button>
+      <button class="op-btn op-btn-transferir" onclick="mostrarTransferir()">
+        <span class="op-btn-icon">↗️</span>
+        <span class="op-btn-label">Transferir</span>
+        <span class="op-btn-desc">Pasar el turno a otra terminal libre</span>
+      </button>
+    </div>
+
+    <!-- Panel de selección de terminal destino -->
+    <div class="transferir-panel" id="transferirPanel">
+      <div class="transferir-titulo">Seleccionar terminal destino</div>
+      <div class="terminales-grid" id="terminalesDisponibles">
+        <div class="term-chip-vacia">Cargando terminales...</div>
+      </div>
+      <button class="transferir-confirmar" id="btnConfirmarTransfer"
+              onclick="ejecutarTransferir()">
+        ↗ CONFIRMAR TRANSFERENCIA
+      </button>
+    </div>
+
+    <button class="op-cancelar" onclick="cerrarOpciones()">✕ Cancelar</button>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ════════════════════════════════════════
+// DETECTAR MAC DEL CLIENTE
+// ════════════════════════════════════════
+// NOTA: Los navegadores NO pueden leer la MAC de red por seguridad.
+// La estrategia correcta es:
+//   1. Si ya está guardada en localStorage → usarla directamente.
+//   2. Si no → intentar deducir la terminal por IP local via WebRTC
+//      cruzándola con las terminales registradas en el servidor.
+//   3. Si tampoco → pedir al usuario que la ingrese manualmente
+//      y guardarla en localStorage para futuras visitas.
+
+let macLocal             = localStorage.getItem('fofel_mac') || '';
+let estadoActual         = 'offline';
+let folioActual          = null;
+let nombreTerminalActual = '';
+
+// Obtiene la IP local del equipo cliente usando WebRTC (sin servidor)
+function obtenerIPLocal() {
+  return new Promise((resolve) => {
+    try {
+      const pc = new RTCPeerConnection({ iceServers: [] });
+      pc.createDataChannel('');
+      pc.createOffer()
+        .then(o => pc.setLocalDescription(o))
+        .catch(() => resolve(null));
+
+      const timer = setTimeout(() => { pc.close(); resolve(null); }, 1500);
+
+      pc.onicecandidate = (e) => {
+        if (!e || !e.candidate) return;
+        // El candidato contiene la IP local en el formato: "... IP puerto ..."
+        const match = /(\d{1,3}(\.\d{1,3}){3})/.exec(e.candidate.candidate);
+        if (match && !match[1].startsWith('169.254')) {
+          clearTimeout(timer);
+          pc.close();
+          resolve(match[1]);
+        }
+      };
+    } catch(e) {
+      resolve(null);
+    }
+  });
+}
+
+// Intenta cruzar la IP local del cliente con las terminales registradas
+async function buscarTerminalPorIP(ipLocal) {
+  if (!ipLocal) return null;
+  try {
+    const r = await fetch('/api/terminales');
+    const data = await r.json();
+    if (!data.ok || !data.data) return null;
+    // Busca una terminal cuya IP registrada coincida
+    const encontrada = data.data.find(t => t.ip && t.ip.trim() === ipLocal.trim());
+    return encontrada ? encontrada.mac : null;
+  } catch(e) {
+    return null;
+  }
+}
+
+// Muestra el panel de configuración manual embebido en la página
+// (evita usar prompt() que algunos navegadores bloquean en pantalla completa)
+function mostrarPanelMAC() {
+  // Crear panel si no existe
+  if (document.getElementById('panelMAC')) return;
+
+  const panel = document.createElement('div');
+  panel.id = 'panelMAC';
+  panel.style.cssText = `
+    position:fixed; inset:0; z-index:300;
+    background:rgba(0,0,0,.88); backdrop-filter:blur(6px);
+    display:flex; align-items:center; justify-content:center;
+  `;
+  panel.innerHTML = `
+    <div style="
+      background:#1E2E3E; border:2px solid #E8540A;
+      border-radius:18px; padding:2.5rem 2.8rem;
+      max-width:440px; width:90%; text-align:center;
+    ">
+      <div style="font-size:2.5rem; margin-bottom:.8rem;">🖥️</div>
+      <h3 style="
+        font-family:'Bebas Neue',sans-serif; font-size:1.6rem;
+        letter-spacing:3px; color:#E8540A; margin-bottom:.5rem;
+      ">IDENTIFICAR TERMINAL</h3>
+      <p style="color:#8B9BAA; font-size:.88rem; line-height:1.6; margin-bottom:1.4rem;">
+        No se pudo detectar automáticamente esta terminal.<br>
+        Ingrese la dirección MAC registrada para este equipo.<br>
+        <span style="color:#F39C12; font-size:.8rem;">
+          Encuéntrela en <strong>/inicio → Terminales</strong>
+        </span>
+      </p>
+      <input id="inputMAC"
+        type="text"
+        placeholder="ej: a4:c3:f0:12:34:56"
+        maxlength="17"
+        style="
+          width:100%; padding:.65rem 1rem;
+          background:#111B25; border:1px solid #2e3d4e;
+          border-radius:8px; color:#F5EDD6;
+          font-family:monospace; font-size:1rem;
+          text-align:center; outline:none; margin-bottom:.5rem;
+        "
+      />
+      <div id="macError" style="color:#E74C3C; font-size:.8rem; min-height:1.2rem; margin-bottom:.8rem;"></div>
+      <button onclick="confirmarMAC()" style="
+        width:100%; padding:.75rem;
+        background:#E8540A; color:#fff; border:none;
+        border-radius:8px; font-family:'Bebas Neue',sans-serif;
+        font-size:1.1rem; letter-spacing:2px; cursor:pointer;
+      ">CONFIRMAR Y CONTINUAR</button>
+      <p style="color:#505c6a; font-size:.75rem; margin-top:1rem;">
+        Esta MAC quedará guardada en este navegador.<br>
+        Para cambiarla, use el botón 🔄 de la barra superior.
+      </p>
+    </div>
+  `;
+  document.body.appendChild(panel);
+
+  // Formatear automáticamente mientras escribe
+  document.getElementById('inputMAC').addEventListener('input', function() {
+    let v = this.value.replace(/[^a-fA-F0-9]/g, '').toLowerCase();
+    let fmt = '';
+    for (let i = 0; i < v.length && i < 12; i++) {
+      if (i > 0 && i % 2 === 0) fmt += ':';
+      fmt += v[i];
+    }
+    this.value = fmt;
+  });
+}
+
+async function confirmarMAC() {
+  const input = document.getElementById('inputMAC');
+  const mac   = input.value.trim().toLowerCase();
+  const valida = /^([0-9a-f]{2}:){5}[0-9a-f]{2}$/.test(mac);
+
+  if (!valida) {
+    document.getElementById('macError').textContent =
+      '⚠️ Formato inválido. Debe ser: xx:xx:xx:xx:xx:xx';
+    input.focus();
+    return;
+  }
+
+  macLocal = mac;
+  localStorage.setItem('fofel_mac', mac);
+
+  // Quitar panel
+  const panel = document.getElementById('panelMAC');
+  if (panel) panel.remove();
+
+  document.getElementById('termMac').textContent = 'MAC: ' + macLocal;
+  await cargarInfoTerminal();
+}
+
+// Botón para olvidar la MAC guardada y volver a configurar
+function olvidarMAC() {
+  localStorage.removeItem('fofel_mac');
+  macLocal = '';
+  location.reload();
+}
+
+async function detectarMAC() {
+  // ── Caso 1: ya tenemos MAC guardada en localStorage ──
+  if (macLocal) {
+    document.getElementById('termMac').textContent = 'MAC: ' + macLocal;
+    await cargarInfoTerminal();
+    return;
+  }
+
+  // ── Caso 2: intentar deducir por IP local (WebRTC) ──
+  showMsg('🔍 Detectando terminal...', 'ok');
+  const ipLocal = await obtenerIPLocal();
+  if (ipLocal) {
+    const macPorIP = await buscarTerminalPorIP(ipLocal);
+    if (macPorIP) {
+      macLocal = macPorIP.toLowerCase();
+      localStorage.setItem('fofel_mac', macLocal);
+      document.getElementById('termMac').textContent = 'MAC: ' + macLocal;
+      showMsg('', 'ok');
+      await cargarInfoTerminal();
+      return;
+    }
+  }
+
+  // ── Caso 3: pedir al usuario que la ingrese manualmente ──
+  showMsg('', 'ok');
+  mostrarPanelMAC();
+}
+
+async function cargarInfoTerminal() {
+  if (!macLocal) return;
+  try {
+    const r = await fetch(`/api/mostrador/terminal/${encodeURIComponent(macLocal)}`);
+    const data = await r.json();
+    if (data.ok && data.data) {
+      const t = data.data;
+      document.getElementById('termNombre').textContent = t.nombre;
+      nombreTerminalActual = t.nombre;
+      estadoActual = t.status;
+      folioActual  = t.folio_actual;
+      actualizarUI();
+      document.getElementById('btnPrincipal').disabled = false;
+    } else {
+      document.getElementById('termNombre').textContent = 'No registrada';
+      document.getElementById('errorMsg').textContent =
+        `La MAC ${macLocal} no está registrada en el sistema. Regístrela en /inicio → Terminales.`;
+      document.getElementById('errorOverlay').classList.add('show');
+    }
+  } catch(e) {
+    showMsg('❌ Error de conexión', 'err');
+  }
+}
+
+function actualizarUI() {
+  const btn   = document.getElementById('btnPrincipal');
+  const badge = document.getElementById('termBadge');
+
+  if (estadoActual === 'online') {
+    btn.className = 'btn-principal btn-online';
+    btn.onclick   = accionPrincipal;       // siempre operable en online
+    btn.disabled  = false;
+    document.getElementById('btnIcono').textContent  = '🟢';
+    document.getElementById('btnEstado').textContent = 'ONLINE';
+    document.getElementById('btnHint').textContent   = 'Presione para terminar atención';
+    badge.className  = 'badge-status badge-online';
+    badge.textContent = 'ONLINE';
+    if (folioActual) {
+      document.getElementById('btnFolio').style.display = 'block';
+      document.getElementById('btnFolio').textContent   = '#' + folioActual;
+    } else {
+      document.getElementById('btnFolio').style.display = 'none';
+    }
+  } else {
+    // Offline: dejar que actualizarBloqueoBtnOffline maneje el botón
+    document.getElementById('btnEstado').textContent = 'OFFLINE';
+    document.getElementById('btnFolio').style.display = 'none';
+    badge.className  = 'badge-status badge-offline';
+    badge.textContent = 'OFFLINE';
+    actualizarBloqueoBtnOffline();
+  }
+}
+
+// ════════════════════════════════════════
+// ACCIÓN PRINCIPAL DEL BOTÓN
+// Si está OFFLINE → tomar turno directamente
+// Si está ONLINE  → mostrar modal de opciones
+// ════════════════════════════════════════
+function accionPrincipal() {
+  if (estadoActual === 'offline') {
+    toggleEstado();           // comportamiento original: tomar turno
+  } else {
+    abrirOpciones();          // nuevo: mostrar modal terminar/transferir
+  }
+}
+
+// ════════════════════════════════════════
+// TOGGLE ONLINE / OFFLINE  (tomar turno)
+// ════════════════════════════════════════
+async function toggleEstado() {
+  const btn = document.getElementById('btnPrincipal');
+  btn.disabled = true;
+
+  try {
+    const r = await fetch('/api/mostrador/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mac: macLocal })
+    });
+    const data = await r.json();
+
+    if (data.ok) {
+      estadoActual = data.status;
+      folioActual  = data.folio;
+      if (data.terminal) nombreTerminalActual = data.terminal;
+      actualizarUI();
+
+      if (data.status === 'online') {
+        if (data.folio) {
+          showMsg(`✅ Atendiendo turno #${data.folio} — ${nombreTerminalActual}`, 'ok');
+          dispararAnuncio(data.folio, nombreTerminalActual);
+        } else {
+          showMsg('🟢 Terminal en línea — sin folios pendientes', 'ok');
+        }
+      } else {
+        showMsg('🔴 Terminal fuera de línea — turno finalizado', 'warn');
+      }
+      cargarCola();
+    } else {
+      showMsg('❌ ' + data.error, 'err');
+    }
+  } catch(e) {
+    showMsg('❌ Error de conexión', 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ════════════════════════════════════════
+// MODAL DE OPCIONES (ONLINE)
+// ════════════════════════════════════════
+function abrirOpciones() {
+  // Mostrar datos del turno actual en el modal
+  document.getElementById('opTurnoNum').textContent    = folioActual ? String(folioActual).padStart(4,'0') : '—';
+  document.getElementById('opTerminalNombre').textContent = nombreTerminalActual || '—';
+
+  // Resetear panel de transferencia
+  document.getElementById('transferirPanel').classList.remove('show');
+  document.getElementById('btnConfirmarTransfer').classList.remove('activo');
+  _terminalDestino = null;
+
+  document.getElementById('opcionesOverlay').classList.add('show');
+}
+
+function cerrarOpciones() {
+  document.getElementById('opcionesOverlay').classList.remove('show');
+  _terminalDestino = null;
+}
+
+// ── TERMINAR atención ──────────────────────────────
+async function ejecutarTerminar() {
+  cerrarOpciones();
+  const btn = document.getElementById('btnPrincipal');
+  btn.disabled = true;
+
+  try {
+    const r = await fetch('/api/mostrador/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mac: macLocal })
+    });
+    const data = await r.json();
+
+    if (data.ok) {
+      estadoActual = 'offline';
+      folioActual  = null;
+      actualizarUI();
+      showMsg('🔴 Atención finalizada — terminal libre', 'warn');
+      cargarCola();
+    } else {
+      showMsg('❌ ' + data.error, 'err');
+    }
+  } catch(e) {
+    showMsg('❌ Error de conexión', 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── TRANSFERIR turno ───────────────────────────────
+let _terminalDestino = null;   // { id, nombre } de la terminal seleccionada
+
+async function mostrarTransferir() {
+  const panel = document.getElementById('transferirPanel');
+  panel.classList.add('show');
+
+  const grid = document.getElementById('terminalesDisponibles');
+  grid.innerHTML = '<div class="term-chip-vacia">Cargando...</div>';
+
+  try {
+    const r    = await fetch('/api/terminales');
+    const data = await r.json();
+
+    if (!data.ok || !data.data) {
+      grid.innerHTML = '<div class="term-chip-vacia">Error al cargar terminales</div>';
+      return;
+    }
+
+    // Mostrar solo terminales OFFLINE (libres) que no sean la propia
+    const libres = data.data.filter(t =>
+      t.status === 'offline' &&
+      t.mac.toLowerCase() !== macLocal.toLowerCase()
+    );
+
+    if (!libres.length) {
+      grid.innerHTML = '<div class="term-chip-vacia">No hay terminales libres disponibles</div>';
+      return;
+    }
+
+    grid.innerHTML = libres.map(t => `
+      <div class="term-chip" id="chip-${t.id}"
+           onclick="seleccionarTerminalDestino(${t.id}, '${t.nombre.replace(/'/g,"\\'")}', this)">
+        <div class="tc-nombre">${t.nombre}</div>
+        <div class="tc-estado">🟢 Disponible</div>
+      </div>`).join('');
+
+  } catch(e) {
+    grid.innerHTML = '<div class="term-chip-vacia">Error de conexión</div>';
+  }
+}
+
+function seleccionarTerminalDestino(id, nombre, el) {
+  // Quitar selección anterior
+  document.querySelectorAll('.term-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  _terminalDestino = { id, nombre };
+
+  // Activar botón de confirmar
+  document.getElementById('btnConfirmarTransfer').classList.add('activo');
+}
+
+async function ejecutarTransferir() {
+  if (!_terminalDestino) return;
+
+  const btnConf = document.getElementById('btnConfirmarTransfer');
+  btnConf.textContent = '⏳ Transfiriendo...';
+  btnConf.classList.remove('activo');
+
+  try {
+    const r = await fetch('/api/mostrador/transferir', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mac_origen:  macLocal,
+        id_destino:  _terminalDestino.id
+      })
+    });
+    const data = await r.json();
+
+    cerrarOpciones();
+
+    if (data.ok) {
+      // Esta terminal queda libre
+      estadoActual = 'offline';
+      folioActual  = null;
+      actualizarUI();
+      showMsg(
+        `↗ Turno #${data.folio} transferido a ${_terminalDestino.nombre}`,
+        'ok'
+      );
+      cargarCola();
+    } else {
+      showMsg('❌ ' + (data.error || 'Error al transferir'), 'err');
+    }
+  } catch(e) {
+    cerrarOpciones();
+    showMsg('❌ Error de conexión al transferir', 'err');
+  }
+}
+
+// ════════════════════════════════════════
+// COLA DE ESPERA
+// ════════════════════════════════════════
+let foliosPendientes = 0;  // conteo actualizado en cada carga
+
+async function cargarCola() {
+  try {
+    const r = await fetch('/api/folios/pendientes');
+    const data = await r.json();
+    const body = document.getElementById('queueBody');
+
+    if (!data.ok || !data.data.length) {
+      foliosPendientes = 0;
+      body.innerHTML = '<div class="queue-empty">Sin turnos en espera 🎉</div>';
+      // Si estaba offline, bloquear el botón y mostrar aviso
+      actualizarBloqueoBtnOffline();
+      return;
+    }
+
+    foliosPendientes = data.data.length;
+    body.innerHTML = data.data.map(f => {
+      const hora    = new Date(f.fecha_hora_toma);
+      const horaStr = `${String(hora.getHours()).padStart(2,'0')}:${String(hora.getMinutes()).padStart(2,'0')}`;
+      return `<div class="queue-item">
+        <div class="queue-folio">${f.folio}</div>
+        <div>
+          <div style="font-size:13px">${f.nombre_sucursal}</div>
+          <div class="queue-hora">⏰ ${horaStr} hrs</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Si volvieron turnos y estaba bloqueado, desbloquear
+    actualizarBloqueoBtnOffline();
+  } catch(e) {}
+}
+
+// ════════════════════════════════════════
+// MENSAJES
+// ════════════════════════════════════════
+function showMsg(msg, tipo='ok') {
+  const el = document.getElementById('msgBar');
+  const colors = { ok:'#2ECC71', err:'#E74C3C', warn:'#F39C12' };
+  el.textContent  = msg;
+  el.style.color  = colors[tipo] || colors.ok;
+  setTimeout(() => { el.textContent = ''; el.style.color = ''; }, 5000);
+}
+
+// Bloquea/desbloquea el botón OFFLINE según haya turnos pendientes
+// No afecta al botón cuando está ONLINE (siempre operable para terminar/transferir)
+function actualizarBloqueoBtnOffline() {
+  if (estadoActual === 'online') return;  // online: nunca bloquear
+
+  const btn     = document.getElementById('btnPrincipal');
+  const hintEl  = document.getElementById('btnHint');
+  const iconoEl = document.getElementById('btnIcono');
+
+  if (foliosPendientes === 0) {
+    // Sin turnos: bloquear visualmente con estado especial
+    btn.disabled  = false;               // habilitado para poder mostrar el mensaje
+    btn.className = 'btn-principal btn-sin-turnos';
+    iconoEl.textContent = '⏸';
+    hintEl.textContent  = 'Sin turnos en espera';
+    // Sobreescribir el onclick para mostrar aviso en lugar de tomar turno
+    btn.onclick = () => {
+      showMsg('⚠️ Sin turnos en espera — espere a que un cliente tome un turno', 'warn');
+    };
+  } else {
+    // Hay turnos: restaurar comportamiento normal
+    btn.className = 'btn-principal btn-offline';
+    iconoEl.textContent = '🔴';
+    hintEl.textContent  = 'Presione para tomar el siguiente turno';
+    btn.onclick = accionPrincipal;
+    btn.disabled = false;
+  }
+}
+
+// ════════════════════════════════════════
+// SOCKET.IO
+// ════════════════════════════════════════
+const socket = io();
+socket.emit('join-mostrador', macLocal);
+
+socket.on('nuevo-folio', () => cargarCola());   // refresca cola Y estado del botón
+socket.on('folio-update', () => { cargarCola(); cargarPausados(); });
+
+// ════════════════════════════════════════
+// AUDIO — Tono musical de alerta
+// ════════════════════════════════════════
+function tocarAlerta() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Melodía: Do5 → Mi5 → Sol5  (acorde mayor ascendente, suave)
+    const notas = [
+      { freq: 523.25, inicio: 0.00, dur: 0.18, vol: 0.32 },
+      { freq: 659.25, inicio: 0.18, dur: 0.18, vol: 0.28 },
+      { freq: 783.99, inicio: 0.36, dur: 0.38, vol: 0.26 },
+    ];
+
+    notas.forEach(({ freq, inicio, dur, vol }) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const t    = ctx.currentTime;
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t + inicio);
+
+      // Envolvente suave: attack corto → sustain → release largo
+      gain.gain.setValueAtTime(0,   t + inicio);
+      gain.gain.linearRampToValueAtTime(vol, t + inicio + 0.05);
+      gain.gain.linearRampToValueAtTime(vol * 0.65, t + inicio + dur - 0.06);
+      gain.gain.linearRampToValueAtTime(0,   t + inicio + dur);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t + inicio);
+      osc.stop(t  + inicio + dur + 0.04);
+    });
+  } catch(e) {
+    console.warn('[Audio] Error al reproducir tono:', e);
+  }
+}
+
+// ════════════════════════════════════════
+// VOZ — Text-to-Speech femenina en español
+// ════════════════════════════════════════
+let vozSeleccionada = null;
+
+function inicializarVoces() {
+  const intentar = () => {
+    const voces = window.speechSynthesis.getVoices();
+    if (!voces.length) return false;
+
+    // Prioridades: femenina MX → MX → femenina ES → ES → cualquier español → primera disponible
+    const prioridades = [
+      v => /es[-_]MX/i.test(v.lang) && /female|mujer|woman/i.test(v.name),
+      v => /es[-_]MX/i.test(v.lang),
+      v => /es[-_]ES/i.test(v.lang) && /female|mujer|woman/i.test(v.name),
+      v => /es[-_]ES/i.test(v.lang),
+      v => /^es/i.test(v.lang),
+      () => voces[0],
+    ];
+
+    for (const test of prioridades) {
+      const encontrada = voces.find(test);
+      if (encontrada) { vozSeleccionada = encontrada; break; }
+    }
+
+    actualizarBadgeVoz();
+    return true;
+  };
+
+  if (!intentar()) {
+    window.speechSynthesis.onvoiceschanged = () => intentar();
+  }
+}
+
+function actualizarBadgeVoz() {
+  const badge = document.getElementById('vozBadge');
+  if (!badge) return;
+  if (vozSeleccionada) {
+    badge.className   = 'badge-voz ok';
+    badge.textContent = `🔊 ${vozSeleccionada.name}`;
+  } else {
+    badge.className   = 'badge-voz off';
+    badge.textContent = '🔇 Sin voz TTS';
+  }
+}
+
+// Convierte un número entero a su representación en palabras (español)
+function numeroAPalabras(n) {
+  if (n === 0) return 'cero';
+  const unidades = ['','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve',
+                    'diez','once','doce','trece','catorce','quince','dieciséis',
+                    'diecisiete','dieciocho','diecinueve'];
+  const decenas  = ['','diez','veinte','treinta','cuarenta','cincuenta',
+                    'sesenta','setenta','ochenta','noventa'];
+  const centenas = ['','cien','doscientos','trescientos','cuatrocientos','quinientos',
+                    'seiscientos','setecientos','ochocientos','novecientos'];
+
+  if (n < 20)   return unidades[n];
+  if (n < 100)  {
+    const d = Math.floor(n / 10), u = n % 10;
+    return u === 0 ? decenas[d] : decenas[d] + ' y ' + unidades[u];
+  }
+  if (n < 1000) {
+    const c = Math.floor(n / 100), r = n % 100;
+    const cStr = (c === 1 && r > 0) ? 'ciento' : centenas[c];
+    return r === 0 ? cStr : cStr + ' ' + numeroAPalabras(r);
+  }
+  // 1000 – 9999
+  const miles = Math.floor(n / 1000), r = n % 1000;
+  const mStr  = miles === 1 ? 'mil' : numeroAPalabras(miles) + ' mil';
+  return r === 0 ? mStr : mStr + ' ' + numeroAPalabras(r);
+}
+
+// Genera la frase hablada a partir del nombre de la terminal
+// Ej: "Mostrador 3" → "mostrador tres"  |  "Caja A" → "caja a"
+function nombreTerminalHablado(nombre) {
+  // Si termina en número, convierte el número a palabras
+  const match = nombre.match(/^(.+?)[\s\-_]+(\d+)\s*$/);
+  if (match) {
+    return match[1].trim() + ' ' + numeroAPalabras(parseInt(match[2]));
+  }
+  return nombre;
+}
+
+function hablarAnuncio(folio, terminal, alFinalizar) {
+  if (!vozSeleccionada || !window.speechSynthesis) {
+    alFinalizar && alFinalizar();
+    return;
+  }
+
+  window.speechSynthesis.cancel(); // cancelar cualquier síntesis previa
+
+  const folioHablado    = numeroAPalabras(folio);
+  const terminalHablada = nombreTerminalHablado(terminal);
+  const frase = `Turno ${folioHablado}... pase por favor a ${terminalHablada}.`;
+
+  const utt     = new SpeechSynthesisUtterance(frase);
+  utt.voice     = vozSeleccionada;
+  utt.lang      = vozSeleccionada.lang;
+  utt.rate      = 0.87;   // ligeramente lenta → más clara
+  utt.pitch     = 1.15;   // tono más alto → más femenina y amigable
+  utt.volume    = 1.0;
+  utt.onend     = () => alFinalizar && alFinalizar();
+  utt.onerror   = () => alFinalizar && alFinalizar();
+
+  // Pequeño delay para que el tono musical preceda a la voz
+  setTimeout(() => window.speechSynthesis.speak(utt), 900);
+}
+
+// ════════════════════════════════════════
+// ORQUESTADOR: tono + voz + UI overlay
+// ════════════════════════════════════════
+const DURACION_OVERLAY_MS = 6000; // tiempo que permanece visible el overlay
+
+function dispararAnuncio(folio, nombreTerminal) {
+  // 1. Tono musical
+  tocarAlerta();
+
+  // 2. Actualizar overlay con datos del turno
+  document.getElementById('anuncioFolio').textContent    = String(folio).padStart(4, '0');
+  document.getElementById('anuncioMostrador').textContent = nombreTerminal.toUpperCase();
+  document.getElementById('anuncioOnda').classList.remove('silencio');
+
+  // 3. Barra de progreso: resetear → animar
+  const fill = document.getElementById('anuncioFill');
+  fill.style.transition = 'none';
+  fill.style.width      = '100%';
+  // Forzar reflow para que la transición arranque limpia
+  fill.getBoundingClientRect();
+  fill.style.transition = `width ${DURACION_OVERLAY_MS}ms linear`;
+  fill.style.width      = '0%';
+
+  // 4. Mostrar overlay
+  document.getElementById('anuncioOverlay').classList.add('show');
+
+  // 5. Voz femenina
+  hablarAnuncio(folio, nombreTerminal, null);
+
+  // 6. Ocultar overlay al finalizar
+  setTimeout(() => {
+    document.getElementById('anuncioOnda').classList.add('silencio');
+    document.getElementById('anuncioOverlay').classList.remove('show');
+  }, DURACION_OVERLAY_MS);
+}
+
+// ════════════════════════════════════════
+// PAUSAR TURNO
+// ════════════════════════════════════════
+async function ejecutarPausar() {
+  cerrarOpciones();
+  const btn = document.getElementById('btnPrincipal');
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/mostrador/pausar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mac: macLocal })
+    });
+    const data = await r.json();
+    if (data.ok) {
+      estadoActual = 'offline';
+      folioActual  = null;
+      actualizarUI();
+      showMsg(`⏸ Turno #${data.folio} pausado — terminal libre para tomar otro`, 'warn');
+      cargarCola();
+      cargarPausados();
+    } else {
+      showMsg('❌ ' + (data.error || 'Error al pausar'), 'err');
+    }
+  } catch(e) {
+    showMsg('❌ Error de conexión al pausar', 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ════════════════════════════════════════
+// PANEL DE TURNOS EN PAUSA
+// ════════════════════════════════════════
+async function cargarPausados() {
+  try {
+    const r    = await fetch('/api/folios/pausados');
+    const data = await r.json();
+    const panel = document.getElementById('pausadosPanel');
+    const body  = document.getElementById('pausadosBody');
+    const count = document.getElementById('pausadosCount');
+
+    if (!data.ok || !data.data || !data.data.length) {
+      panel.classList.remove('visible');
+      return;
+    }
+
+    panel.classList.add('visible');
+    count.textContent = `${data.data.length} turno${data.data.length > 1 ? 's' : ''}`;
+
+    body.innerHTML = data.data.map(f => {
+      const hora    = new Date(f.fecha_hora_toma);
+      const horaStr = `${String(hora.getHours()).padStart(2,'0')}:${String(hora.getMinutes()).padStart(2,'0')}`;
+      const pausadoHace = f.fecha_hora_pausa
+        ? Math.round((Date.now() - new Date(f.fecha_hora_pausa)) / 60000) + ' min'
+        : '';
+      return `<div class="pausado-item">
+        <div class="pausado-folio">${String(f.folio).padStart(4,'0')}</div>
+        <div class="pausado-info">
+          <div style="font-weight:600;color:var(--crema)">${f.nombre_sucursal || 'Sin sucursal'}</div>
+          <div class="pausado-hora">⏰ ${horaStr} hrs${pausadoHace ? ' · pausado hace ' + pausadoHace : ''}</div>
+        </div>
+        <button class="btn-retomar"
+          data-folio-id="${f.id}"
+          data-folio-num="${f.folio}"
+          onclick="solicitarRetomar(this)">▶ Retomar</button>
+      </div>`;
+    }).join('');
+
+  } catch(e) {
+    console.warn('[Pausados] Error al cargar:', e);
+  }
+}
+
+async function solicitarRetomar(btn) {
+  if (estadoActual === 'online') {
+    showMsg('⚠️ Primero termina o pausa el turno actual antes de retomar otro', 'warn');
+    return;
+  }
+  const folioId   = btn.dataset.folioId;
+  const folioNum  = btn.dataset.folioNum;
+  const textoOrig = btn.textContent;
+  btn.textContent = '⏳';
+  btn.disabled    = true;
+
+  try {
+    const r = await fetch('/api/mostrador/retomar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mac: macLocal, folio_id: folioId })
+    });
+    const data = await r.json();
+    if (data.ok) {
+      estadoActual = 'online';
+      folioActual  = data.folio;
+      if (data.terminal) nombreTerminalActual = data.terminal;
+      actualizarUI();
+      showMsg(`▶ Retomando turno #${data.folio} — ${nombreTerminalActual}`, 'ok');
+      cargarCola();
+      cargarPausados();
+    } else {
+      showMsg('❌ ' + (data.error || 'Error al retomar'), 'err');
+      btn.textContent = textoOrig;
+      btn.disabled    = false;
+    }
+  } catch(e) {
+    showMsg('❌ Error de conexión al retomar', 'err');
+    btn.textContent = textoOrig;
+    btn.disabled    = false;
+  }
+}
+
+// ════════════════════════════════════════
+// INICIALIZAR
+// ════════════════════════════════════════
+inicializarVoces();
+detectarMAC();
+cargarCola();
+cargarPausados();
+setInterval(() => { cargarCola(); cargarPausados(); }, 15000);
+</script>
+</body>
+</html>

@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vista General - FOFEL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --naranja: #E8540A;
+    --acero: #111B25;
+    --acero2: #172130;
+    --acero3: #1E2E3E;
+    --crema: #F5EDD6;
+    --gris: #8B9BAA;
+    --verde-online: #27AE60;
+    --rojo-offline: #E74C3C;
+    --borde: rgba(255,255,255,.07);
+    --amarillo: #F39C12;
+    --blanco:#FAFAFA;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; overflow:hidden; font-family:'Barlow',sans-serif; background:var(--acero); color:var(--crema); }
+
+  /* ═══ LAYOUT PRINCIPAL ═══
+     Grid de 6 secciones + pie
+     Sec1: 30%w 65%h | Sec2: 70%w 65%h
+     Sec3: 30%w 25%h | Sec4: 70%w 25%h
+     Sec5: 100%w 10%h
+  */
+  .layout {
+    display: grid;
+    grid-template-columns: 30% 70%;
+    grid-template-rows: 65% 25% 10%;
+    height: 100vh;
+    width: 100vw;
+    gap: 2px;
+  }
+
+  /*.sec {
+    background: var(--acero2);
+    overflow: hidden;
+    position: relative;
+  }*/
+
+  .sec { overflow: hidden; position: relative; }
+
+  /* ── SEC1 Lista de videos ── */
+  #sec1 { border-right:1px solid var(--borde); }
+
+  .sec1-header {
+    background: var(--acero3);
+    padding: 10px 14px;
+    border-bottom: 2px solid var(--naranja);
+    font-family:'Bebas Neue',sans-serif;
+    font-size:16px;
+    letter-spacing:2px;
+    color:var(--naranja);
+  }
+
+  .video-list {
+    overflow-y: auto;
+    height: calc(100% - 44px);
+    scrollbar-width: thin;
+    scrollbar-color: var(--naranja) var(--acero3);
+  }
+
+  .video-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--borde);
+    cursor: pointer;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    transition: background .2s;
+  }
+  .video-item:hover { background:rgba(232,84,10,.08); }
+  .video-item.active { background:rgba(232,84,10,.15); border-left:3px solid var(--naranja); }
+
+  .video-num {
+    width:32px; height:32px;
+    background:var(--acero3);
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Bebas Neue',sans-serif;
+    font-size:14px;
+    color:var(--naranja);
+    flex-shrink:0;
+  }
+  .video-item.active .video-num { background:var(--naranja); color:#fff; }
+
+  .video-nombre { font-size:18px; line-height:1.3; }
+  .video-play-icon { margin-left:auto; font-size:16px; opacity:0; transition:.2s; }
+  .video-item:hover .video-play-icon, .video-item.active .video-play-icon { opacity:1; }
+
+  /* ── SEC2 Video player ── */
+  #sec2 {
+    position:relative;
+    background:#000;
+  }
+
+  #videoPlayer {
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    background:#000;
+    display:block;
+  }
+
+  /* Ocultar fullscreen en todos los navegadores */
+  #videoPlayer::-webkit-media-controls-fullscreen-button { display:none !important; }
+  video::-webkit-media-controls-panel { background:rgba(0,0,0,.6) !important; }
+
+  .video-overlay-info {
+    position:absolute;
+    top:10px;left:10px;
+    background:rgba(0,0,0,.6);
+    border-radius:6px;
+    padding:4px 10px;
+    font-size:12px;
+    color:var(--gris);
+    backdrop-filter:blur(4px);
+  }
+
+  /* ── SEC3 Folios / Estado ── */
+  #sec3 {
+    border-top:1px solid var(--borde);
+    border-right:1px solid var(--borde);
+  }
+
+  .sec3-header {
+    background:var(--acero3);
+    padding:8px 14px;
+    border-bottom:2px solid var(--naranja);
+    font-family:'Bebas Neue',sans-serif;
+    font-size:15px;
+    letter-spacing:2px;
+    color:var(--naranja);
+    display:flex;align-items:center;gap:8px;
+  }
+
+  .folios-tabla-wrap {
+    height:calc(100% - 38px);
+    overflow-y:auto;
+    scrollbar-width:thin;
+    scrollbar-color:var(--naranja) var(--acero3);
+  }
+
+  .folios-tabla {
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+  }
+
+  .folios-tabla th {
+    position:sticky;top:0;
+    background:var(--acero3);
+    padding:6px 12px;
+    text-align:left;
+    font-size:11px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--gris);
+    z-index:1;
+  }
+
+  .folios-tabla td {
+    padding:8px 12px;
+    border-bottom:1px solid var(--borde);
+  }
+
+  .folio-num {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:22px;
+    /*color:var(--crema);*/
+    color:var(--naranja);
+  }
+
+  /* codigo añadido 30 abr 26 */
+  .folios-tabla-wrap {
+    overflow-y: auto;
+    max-height: 300px;
+  }
+
+  .folio-terminal-pending { color:var(--amarillo); font-size:16px; }
+  .folio-terminal-name { color:var(--verde-online); font-size:16px; font-weight:600; }
+
+  .folio-row-atendiendo td { background:rgba(243,156,18,.06); }
+
+  /* ── SEC4 Terminales matrix ── */
+  #sec4 {
+    border-top:1px solid var(--borde);
+  }
+
+  .sec4-header {
+    background:var(--acero3);
+    padding:8px 14px;
+    border-bottom:2px solid var(--naranja);
+    font-family:'Bebas Neue',sans-serif;
+    font-size:15px;
+    letter-spacing:2px;
+    color:var(--naranja);
+  }
+
+  .terminales-matrix {
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:4px;
+    padding:8px;
+    height:calc(100% - 38px);
+    overflow:hidden;
+  }
+
+  .terminal-cell {
+    display:flex;
+    flex-direction:column;
+    border-radius:8px;
+    overflow:hidden;
+    border:1px solid var(--borde);
+  }
+
+  .terminal-nombre {
+    padding:6px 8px;
+    font-size:clamp(12px,2vw,18px);
+    font-weight:600;
+    text-align:center;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    transition:background .4s;
+  }
+
+  .terminal-nombre.online { background:rgba(39,174,96,.25); color:#2ECC71; }
+  .terminal-nombre.offline { background:rgba(231,76,60,.2); color:#E74C3C; }
+
+  .terminal-folio {
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(18px,2.5vw,36px);
+    color:var(--crema);
+    background:rgba(0,0,0,.2);
+    padding:4px;
+  }
+
+  /* ── SEC5 Footer ── */
+  /*#sec5 {
+    grid-column:1/-1;
+    background:var(--acero3);
+    border-top:2px solid var(--naranja);
+    display:flex;
+    align-items:center;
+    padding:0 20px;
+    gap:20px;
+  }*/
+  .sec5 {
+      grid-area: s5;
+      background: var(--bg2);
+      border-top: 2px solid var(--accent);
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      gap: 1rem;
+    }
+
+  .footer-logo {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:22px;
+    color:var(--naranja);
+    letter-spacing:4px;
+    flex-shrink:0;
+  }
+
+  .footer-divider {
+    width:1px; height:30px;
+    background:var(--borde);
+  }
+
+  .footer-clock {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:28px;
+    color:var(--crema);
+    letter-spacing:2px;
+    flex-shrink:0;
+  }
+
+  .footer-clima {
+    position: absolute; white-space: nowrap;
+      font-size: 1.1rem; color: var(--color1);
+      animation: ticker 30s linear infinite;
+      top: 50%; transform: translateY(-50%);
+    /*
+    font-size:16px;/* 14 */
+    color:var(--gris);
+    overflow:hidden;
+    white-space:nowrap;
+    */
+  }
+  .footer-time {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.1rem; font-weight: 600;
+      letter-spacing: 2px; color: var(--accent);
+      white-space: nowrap;
+    }
+    .footer-weather {
+      flex: 1; overflow: hidden;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .weather-label {
+      font-size: 1.1rem; color: var(--color2);
+      font-family: 'Barlow Condensed', sans-serif;
+      letter-spacing: 1px; white-space: nowrap;
+    }
+    .weather-ticker {
+      flex: 1; overflow: hidden;
+      position: relative; height: 24px;
+    }
+    .ticker-inner {
+      position: absolute; white-space: nowrap;
+      font-size: 1.1rem; color: var(--color1);
+      animation: ticker 30s linear infinite;
+      top: 50%; transform: translateY(-50%);
+    }
+    .brand-footer {
+      /*font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.2rem; font-weight: 900;
+      letter-spacing: 4px; color: rgba(232,160,32,0.4);
+      white-space: nowrap;*/
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
+
+
+  .cintilla-wrap {
+    flex:1;
+    overflow:hidden;
+    position:relative;
+  }
+
+  .cintilla {
+    display:inline-block;
+    white-space:nowrap;
+    animation:cintilla 30s linear infinite;
+    font-size:16px; /*14*/
+    color:var(--blanco); /*gris*/
+  }
+
+  @keyframes cintilla {
+    from { transform:translateX(100%); }
+    to   { transform:translateX(-100%); }
+  }
+
+  /* Scrollbar global */
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-track { background:var(--acero3); }
+  ::-webkit-scrollbar-thumb { background:var(--naranja); border-radius:2px; }
+
+  /* ══════════════════════════════════════════════════
+     OVERLAY DE ANUNCIO DE TURNO  ← NUEVO
+  ══════════════════════════════════════════════════ */
+  .anuncio-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    /* Se muestra SOBRE todo el layout, incluyendo el video */
+    background: rgba(5, 12, 22, 0.82);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Estado inicial: invisible */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .35s ease;
+  }
+  .anuncio-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .anuncio-card {
+    background: linear-gradient(150deg, #1a2a3a 0%, #0e1a24 100%);
+    border: 2px solid var(--naranja);
+    border-radius: 24px;
+    padding: 3rem 3.5rem;
+    text-align: center;
+    max-width: 520px;
+    width: 90%;
+    box-shadow:
+      0 0 90px rgba(232,84,10,.3),
+      0 28px 70px rgba(0,0,0,.7);
+    transform: scale(.8) translateY(24px);
+    transition: transform .4s cubic-bezier(.175,.885,.32,1.275);
+  }
+  .anuncio-overlay.show .anuncio-card {
+    transform: scale(1) translateY(0);
+  }
+
+  .anuncio-icono {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: .8rem;
+    animation: iconPop .45s cubic-bezier(.175,.885,.32,1.275);
+  }
+  @keyframes iconPop {
+    from { transform: scale(0) rotate(-15deg); }
+    to   { transform: scale(1) rotate(0deg); }
+  }
+
+  .anuncio-lbl {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 5px;
+    color: var(--gris);
+    text-transform: uppercase;
+  }
+
+  .anuncio-folio {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(4.5rem, 10vw, 7rem);
+    line-height: 1;
+    color: var(--naranja);
+    text-shadow: 0 0 50px rgba(232,84,10,.6);
+    letter-spacing: 6px;
+  }
+
+  .anuncio-sep {
+    width: 60px;
+    height: 2px;
+    background: var(--borde);
+    margin: 1rem auto;
+  }
+
+  .anuncio-frase {
+    font-size: 1.1rem;
+    color: var(--gris);
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  .anuncio-terminal {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    letter-spacing: 3px;
+    color: #2ECC71;
+    margin-top: .4rem;
+    text-transform: uppercase;
+  }
+
+  /* Onda de audio animada */
+  .onda {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 5px;
+    height: 40px;
+    margin: 1.2rem 0 0;
+  }
+  .onda-bar {
+    width: 5px;
+    border-radius: 3px;
+    background: var(--naranja);
+    animation: ondaAnim .7s ease-in-out infinite alternate;
+  }
+  .onda-bar:nth-child(1) { height:10px; animation-delay:0s;    }
+  .onda-bar:nth-child(2) { height:28px; animation-delay:.1s;   }
+  .onda-bar:nth-child(3) { height:18px; animation-delay:.2s;   }
+  .onda-bar:nth-child(4) { height:36px; animation-delay:.3s;   }
+  .onda-bar:nth-child(5) { height:22px; animation-delay:.15s;  }
+  .onda-bar:nth-child(6) { height:14px; animation-delay:.25s;  }
+  .onda-bar:nth-child(7) { height:30px; animation-delay:.05s;  }
+  @keyframes ondaAnim {
+    from { transform: scaleY(.2); }
+    to   { transform: scaleY(1);  }
+  }
+  .onda.silencio .onda-bar {
+    animation: none;
+    transform: scaleY(.15);
+    opacity: .25;
+  }
+
+  /* Barra de progreso del anuncio */
+  .anuncio-prog {
+    height: 3px;
+    background: var(--borde);
+    border-radius: 3px;
+    margin-top: 1.5rem;
+    overflow: hidden;
+  }
+  .anuncio-prog-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--naranja);
+    width: 100%;
+  }
+  .anuncio-prog-fill.vaciando {
+    transition: width linear;
+    width: 0%;
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ════════ SEC1: Lista de videos ════════ -->
+  <div class="sec" id="sec1">
+    <div class="sec1-header">🎬 Lista de Reproducción</div>
+    <div class="video-list" id="videoList">
+      <div style="padding:20px;color:var(--gris);font-size:13px">Cargando videos...</div>
+    </div>
+  </div>
+
+  <!-- ════════ SEC2: Video player ════════ -->
+  <div class="sec" id="sec2">
+    <div class="video-overlay-info" id="videoInfo">Sin video seleccionado</div>
+    <video id="videoPlayer"
+      controls
+      controlslist="nofullscreen nodownload"
+      disablePictureInPicture
+    ></video>
+  </div>
+
+  <!-- ════════ SEC3: Folios/Status ════════ -->
+  <div class="sec" id="sec3">
+    <div class="sec3-header">🎫 Estado de Turnos <span id="contadorPendiente" style="font-size:13px;color:var(--amarillo)"></span></div>
+    <div class="folios-tabla-wrap">
+      <table class="folios-tabla">
+        <thead><tr><th>Folio</th><th>Terminal</th></tr></thead>
+        <tbody id="tbFolios">
+          <tr><td colspan="2" style="color:var(--gris);padding:16px">Sin folios activos</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════ SEC4: Matrix terminales ════════ -->
+  <div class="sec" id="sec4">
+    <div class="sec4-header">💻 Terminales en Atención</div>
+    <div class="terminales-matrix" id="terminalesMatrix">
+      <div style="color:var(--gris);font-size:13px;grid-column:1/-1">Cargando terminales...</div>
+    </div>
+  </div>
+
+  <!-- ════════ SEC5: Footer ════════ -->
+  <div class="sec sec5">
+    <div class="footer-time" id="footerTime">--:--:--</div>
+    <div class="footer-weather">
+      <span class="weather-label">PRONÓSTICO:</span>
+      <div class="weather-ticker">
+        <div class="ticker-inner" id="weatherTicker">Cargando pronóstico del tiempo...</div>
+      </div>
+    </div>
+    <div class="brand-footer" ><img src="/images/logo_fofel.png" alt="logo de fofel"></div>
+  </div>
+</div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     OVERLAY DE INICIO — desbloquea audio con 1 clic
+     (requerido por política de los navegadores)
+═══════════════════════════════════════════════════ -->
+<div id="inicioOverlay" onclick="desbloquearAudio()" style="
+  position:fixed; inset:0; z-index:1000;
+  background:rgba(5,12,20,.92); backdrop-filter:blur(8px);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:1.4rem;
+  cursor:pointer; transition:opacity .5s ease;
+">
+  <div style="font-size:3.5rem;">🔧</div>
+  <div style="
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(2rem,5vw,3.5rem);
+    letter-spacing:6px; color:#E8540A;
+  ">FOFEL FERRETERÍA</div>
+  <div style="
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(1rem,2.5vw,1.6rem);
+    letter-spacing:4px; color:#8B9BAA;
+  ">SISTEMA DE TURNOS</div>
+  <div style="
+    margin-top:.8rem;
+    background:#E8540A; color:#fff;
+    border:none; border-radius:50px;
+    padding:.9rem 2.8rem;
+    font-family:'Bebas Neue',sans-serif;
+    font-size:1.3rem; letter-spacing:3px;
+    box-shadow:0 0 40px rgba(232,84,10,.5);
+    animation:pulsarBtn 1.8s ease infinite;
+  ">▶ INICIAR PANTALLA</div>
+  <div style="font-size:.8rem; color:#505c6a; letter-spacing:1px; margin-top:.4rem;">
+    Toque en cualquier lugar para activar el audio
+  </div>
+</div>
+<style>
+@keyframes pulsarBtn {
+  0%,100% { box-shadow:0 0 30px rgba(232,84,10,.4); transform:scale(1); }
+  50%      { box-shadow:0 0 60px rgba(232,84,10,.7); transform:scale(1.04); }
+}
+</style>
+
+<!-- ══════════════════════════════════════════════════
+     OVERLAY DE ANUNCIO DE TURNO  ← NUEVO
+═══════════════════════════════════════════════════ -->
+<div class="anuncio-overlay" id="anuncioOverlay">
+  <div class="anuncio-card">
+    <span class="anuncio-icono">📢</span>
+    <div class="anuncio-lbl">Turno número</div>
+    <div class="anuncio-folio" id="anuncioFolio">—</div>
+    <div class="anuncio-sep"></div>
+    <div class="anuncio-frase">Pase por favor a</div>
+    <div class="anuncio-terminal" id="anuncioTerminal">—</div>
+    <div class="onda" id="anuncioOnda">
+      <div class="onda-bar"></div>
+      <div class="onda-bar"></div>
+      <div class="onda-bar"></div>
+      <div class="onda-bar"></div>
+      <div class="onda-bar"></div>
+      <div class="onda-bar"></div>
+      <div class="onda-bar"></div>
+    </div>
+    <div class="anuncio-prog">
+      <div class="anuncio-prog-fill" id="anuncioProg"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ════════════════════════════════════════
+// SOCKET.IO - Actualizaciones en tiempo real
+// ════════════════════════════════════════
+const socket = io();
+// Vista es pantalla pasiva: solo se une a la sala 'vista', NUNCA a 'mostrador'
+// No necesita MAC ni identificación de terminal
+socket.emit('join-vista');
+
+socket.on('nuevo-folio', (data) => {
+  agregarFilaFolio(data);
+  actualizarContador();
+  // Anunciar el nuevo turno por voz: "Turno X, por favor espere su turno"
+  if (data.folio) {
+    encolarAnuncioNuevo(data.folio);
+  }
+});
+
+socket.on('folio-update', (data) => {
+  actualizarFilaFolio(data);
+  actualizarContador();
+});
+
+socket.on('terminal-update', (data) => {
+  actualizarCeldaTerminal(data);
+  // Disparar anuncio solo cuando un mostrador toma un turno (pasa a online con folio)
+  // data.nombre = nombre de la terminal (ej: "Mostrador 3")
+  // data.folio  = número de turno asignado
+  if (data.status === 'online' && data.folio && data.nombre) {
+    dispararAnuncio(data.folio, data.nombre);
+  }
+});
+
+// ════════════════════════════════════════
+// DESBLOQUEO DE AUDIO
+// Los navegadores bloquean el audio hasta que el usuario interactúa con
+// la página. En vista (pantalla de TV) nadie hace clic, así que creamos
+// un overlay de inicio que el operador presiona una sola vez al arrancar.
+// ════════════════════════════════════════
+let audioDesbloqueado = false;
+
+function desbloquearAudio() {
+  if (audioDesbloqueado) return;
+  // Crear y reproducir un AudioContext vacío para desbloquear el contexto
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const buf = ctx.createBuffer(1, 1, 22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+    ctx.resume();
+  } catch(e) {}
+  // Desbloquear también el speechSynthesis
+  if (window.speechSynthesis) {
+    const utt = new SpeechSynthesisUtterance('');
+    window.speechSynthesis.speak(utt);
+  }
+  audioDesbloqueado = true;
+  // Ocultar el overlay de inicio
+  const overlay = document.getElementById('inicioOverlay');
+  if (overlay) {
+    overlay.style.opacity = '0';
+    overlay.style.pointerEvents = 'none';
+    setTimeout(() => overlay.remove(), 600);
+  }
+}
+
+// ════════════════════════════════════════
+// RELOJ
+// ════════════════════════════════════════
+function actualizarReloj() {
+  const ahora = new Date();
+  const h = String(ahora.getHours()).padStart(2,'0');
+  const m = String(ahora.getMinutes()).padStart(2,'0');
+  const s = String(ahora.getSeconds()).padStart(2,'0');
+  document.getElementById('footerClock').textContent = `${h}:${m}:${s}`;
+}
+setInterval(actualizarReloj, 1000);
+actualizarReloj();
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('footerTime').textContent =
+    now.toLocaleDateString('es-MX', {weekday:'short', day:'2-digit', month:'short'}).toUpperCase()
+    + '  ' + now.toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+}
+setInterval(updateClock, 1000);
+updateClock();
+// ════════════════════════════════════════
+// CLIMA
+// ════════════════════════════════════════
+/*async function cargarClima() {
+  try {
+    const r = await fetch('/api/clima');
+    const data = await r.json();
+    if (data.ok && data.data) {
+      const c = data.data;
+      document.getElementById('footerClima').textContent =
+        `${c.icono} ${c.ciudad || ''} ${c.temp}°C — ${c.descripcion}`;
+    }
+  } catch(e) {}
+}
+cargarClima();
+setInterval(cargarClima, 10 * 60 * 1000);
+*/
+async function cargarClima() {
+  try {
+    // Intenta geolocalización o usa default (Veracruz, MX)
+    const lat = 19.208333, lon = -96.15;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode,windspeed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=3`;
+    const d = await fetch(url).then(r => r.json());
+    const codes = {0:'Despejado',1:'Mayormente despejado',2:'Parcialmente nublado',3:'Nublado',45:'Niebla',48:'Niebla con escarcha',51:'Llovizna ligera',53:'Llovizna moderada',61:'Lluvia ligera',63:'Lluvia moderada',65:'Lluvia intensa',80:'Chubascos ligeros',81:'Chubascos moderados',95:'Tormenta'};
+    const cur = d.current;
+    const daily = d.daily;
+    const codeLabel = codes[cur.weathercode] || 'Variable';
+    const ticker = `🌡 ${cur.temperature_2m}°C — ${codeLabel} | 💨 ${cur.windspeed_10m} km/h | ` +
+      `Hoy: ${daily.temperature_2m_min[0]}°–${daily.temperature_2m_max[0]}°C | ` +
+      `Mañana: ${daily.temperature_2m_min[1]}°–${daily.temperature_2m_max[1]}°C | ` +
+      `Pasado: ${daily.temperature_2m_min[2]}°–${daily.temperature_2m_max[2]}°C`;
+    document.getElementById('weatherTicker').textContent = ticker + '          ' + ticker;
+  } catch(e) {
+    document.getElementById('weatherTicker').textContent = 'Pronóstico del tiempo no disponible';
+  }
+}
+cargarClima();
+setInterval(cargarClima, 10 * 60 * 1000);
+
+// ════════════════════════════════════════
+// VIDEOS
+// ════════════════════════════════════════
+let videos = [];
+let videoIndex = 0;
+const player = document.getElementById('videoPlayer');
+const videoInfo = document.getElementById('videoInfo');
+
+async function cargarVideos() {
+  const r = await fetch('/api/videos');
+  const data = await r.json();
+  videos = (data.ok && data.data) ? data.data : [];
+  renderListaVideos();
+  if (videos.length) reproducirVideo(0);
+}
+
+function renderListaVideos() {
+  const list = document.getElementById('videoList');
+  if (!videos.length) { list.innerHTML = '<div style="padding:20px;color:var(--gris);font-size:13px">Sin videos configurados</div>'; return; }
+  list.innerHTML = videos.map((v,i) => `
+    <div class="video-item ${i===videoIndex?'active':''}" id="vi-${i}" onclick="reproducirVideo(${i})">
+      <div class="video-num">${v.numero}</div>
+      <div class="video-nombre">${v.nombre}</div>
+      <div class="video-play-icon">▶</div>
+    </div>`).join('');
+}
+
+function reproducirVideo(idx) {
+  if (!videos.length) return;
+  videoIndex = idx % videos.length;
+  const v = videos[videoIndex];
+
+  document.querySelectorAll('.video-item').forEach((el,i) => {
+    el.classList.toggle('active', i === videoIndex);
+  });
+
+  const activeItem = document.getElementById(`vi-${videoIndex}`);
+  if (activeItem) activeItem.scrollIntoView({ behavior:'smooth', block:'nearest' });
+
+  player.src = v.ruta;
+  player.play().catch(()=>{});
+  videoInfo.textContent = `${v.numero}. ${v.nombre}`;
+}
+
+player.addEventListener('ended', () => {
+  reproducirVideo((videoIndex + 1) % videos.length);
+});
+
+player.addEventListener('error', () => {
+  setTimeout(() => reproducirVideo((videoIndex + 1) % videos.length), 2000);
+});
+
+// ════════════════════════════════════════
+// FOLIOS
+// ════════════════════════════════════════
+let foliosActivos = {};
+
+let div = document.getElementById('tbFolios');
+let subiendo = false;
+let velocidad = 2;
+
+/* inicio codigo añadido 20 abr26 */
+function iniciarScrollContinuo(selector, velocidad = 1, pausa = 1500) {
+  const contenedor = document.querySelector(selector);
+  if (!contenedor) return;
+
+  let direccion = 1;
+  let animando = true;
+  let frameId = null;
+  let pausando = false;
+
+  function scrollStep() {
+    if (!animando || pausando) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = contenedor;
+    const maxScroll = scrollHeight - clientHeight;
+
+    if (maxScroll <= 0) {
+      frameId = requestAnimationFrame(scrollStep);
+      return;
+    }
+
+    contenedor.scrollTop += direccion * velocidad;
+
+    if (contenedor.scrollTop >= maxScroll) {
+      contenedor.scrollTop = maxScroll;
+      pausando = true;
+      setTimeout(() => {
+        direccion = -1;
+        pausando = false;
+        frameId = requestAnimationFrame(scrollStep);
+      }, pausa);
+      return;
+    }
+
+    if (contenedor.scrollTop <= 0) {
+      contenedor.scrollTop = 0;
+      pausando = true;
+      setTimeout(() => {
+        direccion = 1;
+        pausando = false;
+        frameId = requestAnimationFrame(scrollStep);
+      }, pausa);
+      return;
+    }
+
+    frameId = requestAnimationFrame(scrollStep);
+  }
+
+  contenedor.addEventListener("mouseenter", () => { animando = false; });
+  contenedor.addEventListener("mouseleave", () => {
+    animando = true;
+    frameId = requestAnimationFrame(scrollStep);
+  });
+
+  frameId = requestAnimationFrame(scrollStep);
+
+  return () => {
+    animando = false;
+    cancelAnimationFrame(frameId);
+  };
+}
+
+iniciarScrollContinuo(".folios-tabla-wrap", 0.8, 2000);
+/* fin de codigo añadido */
+
+async function cargarFolios() {
+  const r = await fetch('/api/folios');
+  const data = await r.json();
+  foliosActivos = {};
+  if (data.ok && data.data) {
+    data.data.forEach(f => {
+      if (f.status_atencion < 2) {
+        foliosActivos[f.folio] = { status: f.status_atencion, terminal: f.terminal_nombre };
+      }
+    });
+  }
+  renderFolios();
+}
+
+function renderFolios() {
+  const tb = document.getElementById('tbFolios');
+  const items = Object.entries(foliosActivos);
+  if (!items.length) {
+    tb.innerHTML = '<tr><td colspan="2" style="color:var(--gris);padding:16px">Sin folios activos</td></tr>';
+    actualizarContador();
+    return;
+  }
+  tb.innerHTML = items.map(([folio, info]) => `
+    <tr class="${info.status===1?'folio-row-atendiendo':''}">
+      <td><div class="folio-num">${folio}</div></td>
+      <td>${info.terminal
+        ? `<span class="folio-terminal-name">▶ ${info.terminal}</span>`
+        : `<span class="folio-terminal-pending">Por atender</span>`}</td>
+    </tr>`).join('');
+  actualizarContador();
+}
+
+function actualizarContador() {
+  const pendientes = Object.values(foliosActivos).filter(f => f.status === 0).length;
+  document.getElementById('contadorPendiente').textContent = pendientes > 0 ? `(${pendientes} en espera)` : '';
+}
+
+function agregarFilaFolio(data) {
+  if (data.status_atencion < 2) {
+    foliosActivos[data.folio] = { status: data.status_atencion, terminal: data.terminal_nombre };
+    renderFolios();
+  }
+}
+
+function actualizarFilaFolio(data) {
+  if (data.status_atencion === 2) {
+    delete foliosActivos[data.folio];
+  } else if (foliosActivos[data.folio] !== undefined) {
+    foliosActivos[data.folio] = { status: data.status_atencion, terminal: data.terminal_nombre };
+  }
+  renderFolios();
+}
+
+// ════════════════════════════════════════
+// TERMINALES MATRIX
+// ════════════════════════════════════════
+let terminales = [];
+
+async function cargarTerminales() {
+  const r = await fetch('/api/terminales');
+  const data = await r.json();
+  terminales = (data.ok && data.data) ? data.data : [];
+  renderTerminales();
+}
+
+function renderTerminales() {
+  const matrix = document.getElementById('terminalesMatrix');
+  if (!terminales.length) {
+    matrix.innerHTML = '<div style="color:var(--gris);font-size:13px;grid-column:1/-1;padding:16px">Sin terminales registradas</div>';
+    return;
+  }
+  matrix.innerHTML = terminales.map(t => `
+    <div class="terminal-cell" id="tc-${t.id}">
+      <div class="terminal-nombre ${t.status}" id="tn-${t.id}">${t.nombre}</div>
+      <div class="terminal-folio" id="tf-${t.id}">${t.status==='online'&&t.folio_actual ? t.folio_actual : ''}</div>
+    </div>`).join('');
+}
+
+function actualizarCeldaTerminal(data) {
+  const idx = terminales.findIndex(t => t.id === data.id);
+  if (idx >= 0) {
+    terminales[idx].status = data.status;
+    terminales[idx].folio_actual = data.folio;
+  }
+
+  const tnEl = document.getElementById(`tn-${data.id}`);
+  const tfEl = document.getElementById(`tf-${data.id}`);
+  if (tnEl) { tnEl.className = `terminal-nombre ${data.status}`; }
+  if (tfEl) { tfEl.textContent = data.status==='online' && data.folio ? data.folio : ''; }
+}
+
+// ════════════════════════════════════════
+// INICIALIZAR
+// ════════════════════════════════════════
+cargarVideos();
+cargarFolios();
+cargarTerminales();
+
+setInterval(cargarFolios,     30000);
+setInterval(cargarTerminales, 30000);
+
+
+// ════════════════════════════════════════════════════════
+// AUDIO Y VOZ — Anuncio de turno  ← NUEVO
+// ════════════════════════════════════════════════════════
+
+// AudioContext global reutilizable (evita el límite de 6 contextos del navegador)
+let _audioCtx = null;
+function getAudioCtx() {
+  if (!_audioCtx || _audioCtx.state === 'closed') {
+    _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (_audioCtx.state === 'suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+
+// ── Tono musical de alerta (Web Audio API, sin archivos externos) ──
+function tocarAlerta() {
+  if (!audioDesbloqueado) return; // no intentar si el audio no fue desbloqueado
+  try {
+    const ctx = getAudioCtx();
+    // Melodía suave: Do5 → Mi5 → Sol5 (acorde mayor ascendente)
+    const notas = [
+      { freq: 523.25, t: 0.00, dur: 0.18, vol: 0.32 },
+      { freq: 659.25, t: 0.18, dur: 0.18, vol: 0.28 },
+      { freq: 783.99, t: 0.36, dur: 0.38, vol: 0.26 },
+    ];
+    notas.forEach(({ freq, t, dur, vol }) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const now  = ctx.currentTime;
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + t);
+      gain.gain.setValueAtTime(0,   now + t);
+      gain.gain.linearRampToValueAtTime(vol, now + t + 0.05);
+      gain.gain.linearRampToValueAtTime(vol * 0.65, now + t + dur - 0.06);
+      gain.gain.linearRampToValueAtTime(0,   now + t + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + t);
+      osc.stop(now  + t + dur + 0.04);
+    });
+  } catch(e) {
+    console.warn('[Audio] No se pudo reproducir el tono:', e);
+  }
+}
+
+// ── Text-to-Speech: selección de voz femenina en español ──
+let vozSeleccionada = null;
+
+(function inicializarVoces() {
+  const intentar = () => {
+    const voces = window.speechSynthesis.getVoices();
+    if (!voces.length) return false;
+    // Prioridades: femenina MX → MX → femenina ES → ES → cualquier español → primera
+    const prioridades = [
+      v => /es[-_]MX/i.test(v.lang) && /female|mujer|woman/i.test(v.name),
+      v => /es[-_]MX/i.test(v.lang),
+      v => /es[-_]ES/i.test(v.lang) && /female|mujer|woman/i.test(v.name),
+      v => /es[-_]ES/i.test(v.lang),
+      v => /^es/i.test(v.lang),
+      () => voces[0],
+    ];
+    for (const test of prioridades) {
+      const encontrada = voces.find(test);
+      if (encontrada) { vozSeleccionada = encontrada; break; }
+    }
+    return true;
+  };
+  if (!intentar()) {
+    window.speechSynthesis.onvoiceschanged = () => intentar();
+  }
+})();
+
+// Convierte número entero a palabras en español
+function numeroAPalabras(n) {
+  if (n === 0) return 'cero';
+  const unidades = ['','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve',
+                    'diez','once','doce','trece','catorce','quince','dieciséis',
+                    'diecisiete','dieciocho','diecinueve'];
+  const decenas  = ['','diez','veinte','treinta','cuarenta','cincuenta',
+                    'sesenta','setenta','ochenta','noventa'];
+  const centenas = ['','cien','doscientos','trescientos','cuatrocientos','quinientos',
+                    'seiscientos','setecientos','ochocientos','novecientos'];
+  if (n < 20)   return unidades[n];
+  if (n < 100)  {
+    const d = Math.floor(n / 10), u = n % 10;
+    return u === 0 ? decenas[d] : decenas[d] + ' y ' + unidades[u];
+  }
+  if (n < 1000) {
+    const c = Math.floor(n / 100), r = n % 100;
+    const cStr = (c === 1 && r > 0) ? 'ciento' : centenas[c];
+    return r === 0 ? cStr : cStr + ' ' + numeroAPalabras(r);
+  }
+  const miles = Math.floor(n / 1000), r = n % 1000;
+  const mStr  = miles === 1 ? 'mil' : numeroAPalabras(miles) + ' mil';
+  return r === 0 ? mStr : mStr + ' ' + numeroAPalabras(r);
+}
+
+// Convierte el nombre de la terminal a forma hablada
+// "Mostrador 3" → "mostrador tres"  |  "Caja 1" → "caja uno"
+function terminalAFrase(nombre) {
+  const match = nombre.match(/^(.+?)[\s\-_]+(\d+)\s*$/);
+  if (match) return match[1].trim() + ' ' + numeroAPalabras(parseInt(match[2]));
+  return nombre;
+}
+
+function hablarAnuncio(folio, nombreTerminal) {
+  if (!audioDesbloqueado) return; // guard: no hablar sin interacción previa
+  if (!vozSeleccionada || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+
+  const frase = `Turno ${numeroAPalabras(folio)}... pase por favor a ${terminalAFrase(nombreTerminal)}.`;
+  const utt   = new SpeechSynthesisUtterance(frase);
+  utt.voice   = vozSeleccionada;
+  utt.lang    = vozSeleccionada.lang;
+  utt.rate    = 0.87;   // ligeramente lenta: más clara y natural
+  utt.pitch   = 1.15;   // tono más agudo: voz femenina suave
+  utt.volume  = 1.0;
+  // El tono musical dura ~900 ms, la voz arranca después
+  setTimeout(() => window.speechSynthesis.speak(utt), 900);
+}
+
+// ── Cola de anuncios: evita solapamiento si llegan dos turnos seguidos ──
+const colaAnuncios = [];
+let anunciandoAhora = false;
+const DURACION_OVERLAY_MS = 6500;
+
+function encolarAnuncio(folio, nombreTerminal) {
+  colaAnuncios.push({ folio, nombreTerminal });
+  if (!anunciandoAhora) procesarCola();
+}
+
+function procesarCola() {
+  if (!colaAnuncios.length) { anunciandoAhora = false; return; }
+  anunciandoAhora = true;
+  const { folio, nombreTerminal } = colaAnuncios.shift();
+  mostrarOverlay(folio, nombreTerminal);
+  setTimeout(procesarCola, DURACION_OVERLAY_MS + 400);
+}
+
+function mostrarOverlay(folio, nombreTerminal) {
+  document.getElementById('anuncioFolio').textContent    = String(folio).padStart(4, '0');
+  document.getElementById('anuncioTerminal').textContent = nombreTerminal.toUpperCase();
+  document.getElementById('anuncioOnda').classList.remove('silencio');
+
+  // Barra de progreso: resetear y animar
+  const fill = document.getElementById('anuncioProg');
+  fill.classList.remove('vaciando');
+  fill.style.transition = 'none';
+  fill.style.width      = '100%';
+  fill.getBoundingClientRect(); // forzar reflow
+  fill.classList.add('vaciando');
+  fill.style.transitionDuration = DURACION_OVERLAY_MS + 'ms';
+
+  document.getElementById('anuncioOverlay').classList.add('show');
+
+  tocarAlerta();
+  hablarAnuncio(folio, nombreTerminal);
+
+  setTimeout(() => {
+    document.getElementById('anuncioOnda').classList.add('silencio');
+    document.getElementById('anuncioOverlay').classList.remove('show');
+  }, DURACION_OVERLAY_MS);
+}
+
+// Punto de entrada llamado desde socket.on('terminal-update')
+function dispararAnuncio(folio, nombreTerminal) {
+  encolarAnuncio(folio, nombreTerminal);
+}
+
+// ════════════════════════════════════════════════════════
+// ANUNCIO DE NUEVO TURNO (socket 'nuevo-folio')
+// Frase: "Turno X, por favor espere su turno"
+// Usa el mismo overlay pero con contenido distinto y color azul
+// para diferenciarlo visualmente del anuncio de asignación
+// ════════════════════════════════════════════════════════
+
+// Cola independiente para no mezclar con los anuncios de asignación
+const colaNuevos = [];
+let anunciandoNuevoAhora = false;
+const DURACION_NUEVO_MS  = 4500;   // más corto: solo es confirmación de recepción
+
+function encolarAnuncioNuevo(folio) {
+  colaNuevos.push(folio);
+  if (!anunciandoNuevoAhora && !anunciandoAhora) procesarColaNuevos();
+}
+
+function procesarColaNuevos() {
+  // Esperar a que termine cualquier anuncio de asignación
+  if (anunciandoAhora) {
+    setTimeout(procesarColaNuevos, 300);
+    return;
+  }
+  if (!colaNuevos.length) { anunciandoNuevoAhora = false; return; }
+  anunciandoNuevoAhora = true;
+  const folio = colaNuevos.shift();
+  mostrarOverlayNuevo(folio);
+  setTimeout(procesarColaNuevos, DURACION_NUEVO_MS + 400);
+}
+
+function mostrarOverlayNuevo(folio) {
+  // Reusar el mismo overlay cambiando contenido y color de acento
+  document.getElementById('anuncioFolio').textContent    = String(folio).padStart(4, '0');
+  document.getElementById('anuncioTerminal').textContent = 'POR FAVOR ESPERE';
+  document.getElementById('anuncioOnda').classList.remove('silencio');
+
+  // Cambiar color del folio a azul para diferenciarlo
+  const folioEl = document.getElementById('anuncioFolio');
+  folioEl.style.color      = '#3498DB';
+  folioEl.style.textShadow = '0 0 40px rgba(52,152,219,.55)';
+
+  // Cambiar el label superior
+  const lblEl = document.querySelector('.anuncio-lbl');
+  const lblOrig = lblEl ? lblEl.textContent : '';
+  if (lblEl) lblEl.textContent = 'Nuevo turno número';
+
+  // Cambiar color de la terminal a gris (aún sin asignar)
+  const termEl = document.getElementById('anuncioTerminal');
+  termEl.style.color = 'var(--gris)';
+
+  // Barra de progreso
+  const fill = document.getElementById('anuncioProg');
+  fill.classList.remove('vaciando');
+  fill.style.transition = 'none';
+  fill.style.width      = '100%';
+  fill.getBoundingClientRect();
+  fill.classList.add('vaciando');
+  fill.style.transitionDuration = DURACION_NUEVO_MS + 'ms';
+
+  document.getElementById('anuncioOverlay').classList.add('show');
+
+  // Tono más suave (solo las dos primeras notas)
+  tocarAlertaCorta();
+
+  // Voz: "Turno X, por favor espere su turno"
+  hablarNuevoTurno(folio);
+
+  setTimeout(() => {
+    document.getElementById('anuncioOnda').classList.add('silencio');
+    document.getElementById('anuncioOverlay').classList.remove('show');
+    // Restaurar estilos originales del overlay para los anuncios de asignación
+    folioEl.style.color      = '';
+    folioEl.style.textShadow = '';
+    termEl.style.color       = '';
+    if (lblEl) lblEl.textContent = lblOrig || 'Turno número';
+    anunciandoNuevoAhora = false;
+  }, DURACION_NUEVO_MS);
+}
+
+// Tono corto: solo Do5 → Mi5 (2 notas en vez de 3)
+function tocarAlertaCorta() {
+  if (!audioDesbloqueado) return;
+  try {
+    const ctx = getAudioCtx();
+    const notas = [
+      { freq: 523.25, t: 0.00, dur: 0.16, vol: 0.28 },
+      { freq: 659.25, t: 0.18, dur: 0.22, vol: 0.24 },
+    ];
+    notas.forEach(({ freq, t, dur, vol }) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const now  = ctx.currentTime;
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + t);
+      gain.gain.setValueAtTime(0,   now + t);
+      gain.gain.linearRampToValueAtTime(vol, now + t + 0.05);
+      gain.gain.linearRampToValueAtTime(vol * 0.5, now + t + dur - 0.05);
+      gain.gain.linearRampToValueAtTime(0,   now + t + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + t);
+      osc.stop(now  + t + dur + 0.04);
+    });
+  } catch(e) {}
+}
+
+// Hablar nuevo turno: "Turno mil tres, por favor espere su turno"
+function hablarNuevoTurno(folio) {
+  if (!audioDesbloqueado) return;
+  if (!vozSeleccionada || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+
+  const frase = `Turno ${numeroAPalabras(folio)}. Por favor espere su turno.`;
+  const utt   = new SpeechSynthesisUtterance(frase);
+  utt.voice   = vozSeleccionada;
+  utt.lang    = vozSeleccionada.lang;
+  utt.rate    = 0.88;
+  utt.pitch   = 1.15;
+  utt.volume  = 1.0;
+  setTimeout(() => window.speechSynthesis.speak(utt), 700);
+}
+</script>
+</body>
+</html>
