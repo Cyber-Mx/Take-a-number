@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tome su Turno - FOFEL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --naranja: #E8540A;
+    --naranja-glow: rgba(232,84,10,.4);
+    --acero: #2E4ED1;/*1A2430;  29ABR26*/
+    --crema: #FFA01A;/*F5EDD6;  29ABR26*/
+    --dorado:#FFF01A;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family:'Barlow',sans-serif;
+    background: var(--acero);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    user-select:none;
+  }
+
+  /* Fondo animado con partículas tipo tornillos/herramientas */
+  .bg-pattern {
+    position:fixed; inset:0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(232,84,10,.08) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 50%, rgba(44,62,80,.5) 0%, transparent 60%);
+    pointer-events:none;
+  }
+
+  .bg-icons {
+    position:fixed; inset:0;
+    pointer-events:none;
+    overflow:hidden;
+    opacity:.06;
+  }
+
+  .bg-icons span {
+    position:absolute;
+    font-size:40px;
+    animation: float linear infinite;
+  }
+
+  @keyframes float {
+    from { transform:translateY(110vh) rotate(0deg); }
+    to   { transform:translateY(-10vh) rotate(360deg); }
+  }
+
+  /* LOGO */
+  .logo {
+    /*font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(20px,3vw,32px);
+    color:var(--naranja);
+    letter-spacing:6px;
+    margin-bottom:8px;
+    animation:fadeIn .6s ease;*/
+    background-image: url('/images/logo_fofel.png');
+  }
+
+  /* BIENVENIDA */
+  .bienvenido {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(48px,8vw,96px);
+    color:var(--crema);
+    letter-spacing:4px;
+    text-align:center;
+    line-height:1;
+    animation:slideDown .7s ease;
+  }
+
+  .sucursal {
+    font-size:clamp(22px,3vw,32px);/*font-size:clamp(18px,3vw,28px);*/
+    color:var(--dorado);/*color:var(--naranja);*/
+    letter-spacing:3px;
+    text-align:center;
+    margin-top:8px;
+    font-weight:500;/*300;*/
+    animation:slideDown .7s .1s ease both;
+  }
+
+  /* BOTÓN */
+  .btn-turno {
+    width:clamp(200px,30vw,280px);
+    height:clamp(200px,30vw,280px);
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 35%, #ff7235, var(--naranja) 50%, var(--naranja-dark, #B33F00));
+    border:none;
+    cursor:pointer;
+    margin-top:clamp(30px,5vh,60px);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    box-shadow:
+      0 0 0 8px rgba(232,84,10,.15),
+      0 0 0 16px rgba(232,84,10,.08),
+      0 20px 60px rgba(232,84,10,.4);
+    transition:all .15s ease;
+    animation:pulse 2.5s ease infinite, slideUp .8s .2s ease both;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .btn-turno::before {
+    content:'';
+    position:absolute;
+    top:-50%;left:-50%;
+    width:200%;height:200%;
+    background:radial-gradient(circle, rgba(255,255,255,.15) 0%, transparent 60%);
+    pointer-events:none;
+  }
+
+  .btn-turno:active {
+    transform:scale(.94);
+    box-shadow:
+      0 0 0 4px rgba(232,84,10,.2),
+      0 10px 30px rgba(232,84,10,.3);
+  }
+
+  .btn-turno:disabled { opacity:.5; cursor:wait; animation:none; }
+
+  .btn-icon { font-size:clamp(40px,6vw,64px); }
+
+  .btn-text {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(18px,2.5vw,26px);
+    color:#fff;
+    letter-spacing:2px;
+    text-align:center;
+    text-shadow:0 2px 8px rgba(0,0,0,.3);
+  }
+
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 8px rgba(232,84,10,.15), 0 0 0 16px rgba(232,84,10,.08), 0 20px 60px rgba(232,84,10,.4); }
+    50%      { box-shadow: 0 0 0 12px rgba(232,84,10,.2), 0 0 0 24px rgba(232,84,10,.1), 0 20px 80px rgba(232,84,10,.5); }
+  }
+
+  /* MODAL de confirmación */
+  .modal-overlay {
+    position:fixed; inset:0;
+    background:rgba(0,0,0,.85);
+    display:flex;align-items:center;justify-content:center;
+    z-index:100;
+    opacity:0; pointer-events:none;
+    transition:opacity .3s;
+  }
+  .modal-overlay.show { opacity:1; pointer-events:all; }
+
+  .modal {
+    background:#fff;
+    border-radius:20px;
+    padding:clamp(30px,5vw,60px) clamp(30px,6vw,80px);
+    text-align:center;
+    color:#1A2430;
+    max-width:90vw;
+    transform:scale(.8);
+    transition:transform .3s;
+    font-family:'Barlow',sans-serif;
+  }
+  .modal-overlay.show .modal { transform:scale(1); }
+
+  .modal-folio-label { font-size:16px; color:#888; letter-spacing:2px; text-transform:uppercase; }
+  .modal-folio {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(80px,15vw,140px);
+    color:var(--naranja);
+    line-height:1;
+    text-shadow: 4px 4px 0 rgba(232,84,10,.2);
+  }
+  .modal-turno { font-size:14px; color:#888; margin-top:4px; }
+  .modal-ok {
+    margin-top:24px;
+    background:var(--naranja);
+    color:#fff;
+    border:none;
+    border-radius:50px;
+    padding:14px 40px;
+    font-family:'Bebas Neue',sans-serif;
+    font-size:22px;
+    letter-spacing:2px;
+    cursor:pointer;
+    transition:all .2s;
+  }
+  .modal-ok:hover { background:#B33F00; }
+
+  /* ERROR */
+  .error-msg {
+    color:#E74C3C;
+    font-size:13px;
+    margin-top:16px;
+    text-align:center;
+    min-height:20px;
+  }
+
+  @keyframes fadeIn { from{opacity:0}to{opacity:1} }
+  @keyframes slideDown { from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)} }
+  @keyframes slideUp { from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+<div class="bg-icons" id="bgIcons"></div>
+
+<!--<div class="logo">🔧 FOFEL</div>-->
+<div class="logo"><img src="/images/logo_fofel.png"/></div>
+<div class="bienvenido">¡ BIENVENIDO !</div>
+<div class="sucursal" id="nombreSucursal">Cargando...</div>
+
+<button class="btn-turno" id="btnTurno" onclick="tomarTurno()">
+  <span class="btn-icon">🎫</span>
+  <span class="btn-text">Tome su Turno</span>
+</button>
+
+<div class="error-msg" id="errorMsg"></div>
+
+<!-- MODAL de folio generado -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-folio-label">Su número de turno es</div>
+    <div class="modal-folio" id="modalFolio">—</div>
+    <div class="modal-turno">Por favor espere a ser llamado</div>
+    <button class="modal-ok" onclick="cerrarModal()">✓ Aceptar</button>
+  </div>
+</div>
+
+<script>
+// Iconos flotantes de ferretería
+const iconos = ['🔧','🔩','🪛','🔨','⚙️','🪚','🔑','🪤','🔌','💡'];
+const bg = document.getElementById('bgIcons');
+for (let i=0; i<20; i++) {
+  const span = document.createElement('span');
+  span.textContent = iconos[Math.floor(Math.random()*iconos.length)];
+  span.style.left = Math.random()*100 + 'vw';
+  span.style.animationDuration = (8 + Math.random()*12) + 's';
+  span.style.animationDelay = (Math.random()*15) + 's';
+  span.style.fontSize = (24 + Math.random()*40) + 'px';
+  bg.appendChild(span);
+}
+
+// Cargar nombre de sucursal
+async function cargarSucursal() {
+  try {
+    const r = await fetch('/api/turno/info-sucursal');
+    const data = await r.json();
+    if (data.ok && data.data) {
+      document.getElementById('nombreSucursal').textContent = data.data.nombre_sucursal;
+    } else {
+      document.getElementById('nombreSucursal').textContent = '';
+      document.getElementById('errorMsg').textContent = '⚠️ Configure el inicio del día en /inicio antes de usar este módulo';
+    }
+  } catch(e) {
+    document.getElementById('nombreSucursal').textContent = 'FOFEL';
+  }
+}
+
+async function tomarTurno() {
+  const btn = document.getElementById('btnTurno');
+  const err = document.getElementById('errorMsg');
+  btn.disabled = true;
+  err.textContent = '';
+
+  try {
+    const r = await fetch('/api/turno/generar', { method:'POST', headers:{'Content-Type':'application/json'} });
+    const data = await r.json();
+
+    if (data.ok) {
+      document.getElementById('modalFolio').textContent = data.folio;
+      document.getElementById('modalOverlay').classList.add('show');
+      if (!data.imprimio) {
+        err.textContent = '⚠️ Turno generado, pero no se pudo imprimir. Muestre este número al personal.';
+      }
+    } else {
+      err.textContent = '❌ ' + data.error;
+      btn.disabled = false;
+    }
+  } catch(e) {
+    err.textContent = '❌ Error de conexión. Intente de nuevo.';
+    btn.disabled = false;
+  }
+}
+
+function cerrarModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  document.getElementById('errorMsg').textContent = '';
+  setTimeout(() => { document.getElementById('btnTurno').disabled = false; }, 300);
+}
+
+cargarSucursal();
+</script>
+</body>
+</html>
